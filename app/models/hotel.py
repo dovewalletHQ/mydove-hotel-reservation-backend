@@ -10,6 +10,7 @@ class HotelSuite(BaseMongoModel):
     description: str = Field(..., min_length=1)
     room_number: int = Field(...,gt=0)
     facilities: list[str]
+    is_available: bool = Field(default=True)
 
     class Setting:
         name = "hotel_suite"
