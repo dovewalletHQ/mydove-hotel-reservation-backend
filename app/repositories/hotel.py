@@ -50,13 +50,19 @@ class HotelRepository:
             data_to_update = update_data
             if isinstance(update_data, HotelSuite):
                 data_to_update = update_data.model_dump(exclude_unset=True)
-            elif isinstance(update_data, dict):
-                 pass
+            
+            if not data_to_update:
+                 raise ValueError("No data provided for update")
             
             # Update fields
+            updated = False
             for key, value in data_to_update.items():
-                if hasattr(existing_suite, key):
+                if key in HotelSuite.model_fields and key not in ["id", "_id", "createdAt"]:
                      setattr(existing_suite, key, value)
+                     updated = True
+            
+            if not updated:
+                raise ValueError("No valid fields provided for update")
             
             await existing_suite.save()
             return existing_suite

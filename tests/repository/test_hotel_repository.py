@@ -61,9 +61,11 @@ class TestHotelSuiteRepository:
         assert hotel_suite.facilities == data["facilities"]
 
         data["name"] = "Suite 2"
+        data["room_type"] = "VVIP"
         suite_input = HotelSuite(**data)
         hotel_suite = await HotelRepository.update_hotel_suite(str(hotel_suite.id), suite_input.model_dump())
         assert hotel_suite.name == data["name"]
+        assert hotel_suite.room_type == data["room_type"]
 
     @pytest.mark.anyio
     async def test_update_hotel_suite_empty_data(self):
@@ -80,6 +82,23 @@ class TestHotelSuiteRepository:
         
         with pytest.raises(ValueError, match="No data provided for update"):
             await HotelRepository.update_hotel_suite(str(hotel_suite.id), {})
+
+    @pytest.mark.anyio
+    async def test_update_hotel_suite_invalid_fields(self):
+        data = {
+            "hotel_id": 1,
+            "name": "Suite 1",
+            "room_type": "Regular",
+            "price": Money("100.00"),
+            "description": "Description 1",
+            "room_number": 1,
+            "facilities": ["Playstation", "TV", "Air Conditioning", "Mini Bar", "Balcony", "Safe"]
+        }
+        suite_input = HotelSuite(**data)
+        hotel_suite = await HotelRepository.create_hotel_suite(suite_input)
+        
+        with pytest.raises(ValueError, match="No valid fields provided for update"):
+            await HotelRepository.update_hotel_suite(str(hotel_suite.id), {"invalid_field": "value"})
 
     @pytest.mark.anyio
     async def test_delete_hotel_suite(self):
