@@ -36,6 +36,19 @@ class HotelRepository:
             raise
 
     @staticmethod
+    async def get_hotel_suites_by_id(hotel_id: str) -> List[HotelSuite]:
+        """Get all hotel suites by hotel id"""
+        if hotel_id is None or not hotel_id.strip():
+            raise ValueError("Invalid hotel_id: hotel_id cannot be None or empty")
+
+        logger.info("Getting hotel suites by hotel id: %s", hotel_id)
+        try:
+            return await HotelSuite.find(HotelSuite.hotel_id == str(hotel_id)).to_list()
+        except Exception as e:
+            logger.error("Failed to get hotel suites by hotel id: %s", e)
+            raise
+
+    @staticmethod
     async def get_all_hotel_suites() -> List[HotelSuite]:
         logger.info("Getting all hotel suites")
         try:
@@ -45,12 +58,23 @@ class HotelRepository:
             raise
 
     @staticmethod
-    async def get_available_hotel_suites() -> List[HotelSuite]:
+    async def get_available_hotel_suites_by_hotel_id(hotel_id: str) -> List[HotelSuite]:
+        """Get all available hotel suites by hotel id"""
         logger.info("Getting available hotel suites")
         try:
-            return await HotelSuite.find_all(HotelSuite.is_available == True).to_list()
+            return await HotelSuite.find_all(HotelSuite.is_available == True, HotelSuite.hotel_id == str(hotel_id)).to_list()
         except Exception as e:
             logger.error("Failed to get available hotel suites: %s", e)
+            raise
+    
+    @staticmethod
+    async def get_unavailable_hotel_suites_by_hotel_id(hotel_id: str) -> List[HotelSuite]:
+        """Get all unavailable hotel suites by hotel id"""
+        logger.info("Getting unavailable hotel suites")
+        try:
+            return await HotelSuite.find_all(HotelSuite.is_available == False, HotelSuite.hotel_id == str(hotel_id)).to_list()
+        except Exception as e:
+            logger.error("Failed to get unavailable hotel suites: %s", e)
             raise
 
     @staticmethod
@@ -141,11 +165,21 @@ class HotelRepository:
             raise
     
     @staticmethod
-    async def get_suite_by_room_number(room_number: int) -> List[HotelSuite]:
+    async def get_suite_by_room_number(room_number: int, hotel_id: str) -> HotelSuite:
         """Get suite by room number"""
         logger.info("Getting suite by room number: %s", room_number)
         try:
-            return await HotelSuite.find(HotelSuite.room_number == room_number).to_list()
+            return await HotelSuite.find_one(HotelSuite.room_number == room_number, HotelSuite.hotel_id == str(hotel_id))
         except Exception as e:
             logger.error("Failed to get suite by room number: %s", e)
+            raise
+
+    @staticmethod
+    async def delete_suite_by_room_number(room_number, hotel_id):
+        """Delete suite by room number and hotel id"""
+        logger.info("Deleting suite by room number: %s", room_number)
+        try:
+            return await HotelSuite.delete_one(HotelSuite.room_number == room_number, HotelSuite.hotel_id == str(hotel_id))
+        except Exception as e:
+            logger.error("Failed to delete suite by room number: %s", e)
             raise

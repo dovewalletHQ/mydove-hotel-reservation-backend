@@ -2,7 +2,7 @@ import os
 from motor.motor_asyncio import AsyncIOMotorClient
 from beanie import init_beanie
 
-from app.models.hotel import HotelSuite, Hotel
+from app.models.hotel import HotelSuite, Hotel, HotelProfile
 
 
 async def init_db():
@@ -20,6 +20,7 @@ async def init_db():
         database=client[db_name],
         document_models=[
             HotelSuite,
-            Hotel
+            Hotel,
+            HotelProfile
         ]
     )

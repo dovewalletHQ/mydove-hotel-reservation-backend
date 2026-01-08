@@ -224,3 +224,26 @@ class TestHotelSuiteRepository:
         assert fetched_hotel_suite[-1].id == hotel_suite.id
         assert fetched_hotel_suite[-1].name == hotel_suite.name
         print(fetched_hotel_suite)
+    
+    @pytest.mark.anyio
+    async def test_get_suite_by_room_number(self, setup_new_hotel):
+        hotel = setup_new_hotel
+        data = {
+            "hotel_id": str(hotel.id),
+            "name": "Suite 100",
+            "price": Money("100.00"),
+            "description": "Highly comfortable suite",
+            "room_number": 1,
+            "facilities": ["Playstation", "TV", "Air Conditioning", "Mini Bar", "Balcony", "Safe"]
+        }
+        suite_input = HotelSuite(**data)
+        hotel_suite = await HotelRepository.create_hotel_suite(suite_input)
+        assert hotel_suite.name == data["name"]
+        assert hotel_suite.price == data["price"]
+        assert hotel_suite.description == data["description"]
+        assert hotel_suite.room_number == data["room_number"]
+        assert hotel_suite.facilities == data["facilities"]
+
+        fetched_hotel_suite = await HotelRepository.get_suite_by_room_number(hotel_suite.room_number, hotel.id)
+        assert fetched_hotel_suite.id == hotel_suite.id
+        assert fetched_hotel_suite.name == hotel_suite.name

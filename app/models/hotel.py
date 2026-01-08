@@ -1,4 +1,6 @@
 import enum
+from typing import List
+
 from pydantic import Field
 
 from app.models.base import BaseMongoModel
@@ -26,17 +28,32 @@ class HotelSuite(BaseMongoModel):
     description: str = Field(..., min_length=1)
     room_number: int = Field(...,gt=0)
     room_type: RoomType = Field(default=RoomType.REGULAR, min_length=1)
-    facilities: list[str]
+    facilities: List[str] = Field(default=[], description="List of facilities available in the room [optional]")
+    suite_photo_urls: List[str] = Field(default=[], description="List of photo URLs for the suite [optional]")
     is_available: bool = Field(default=True)
 
     class Settings:
         name = "hotel_suite"
+
+class HotelProfile(BaseMongoModel):
+    """Data model for Hotel creation request."""
+    hotel_id: str
+    description: str | None = Field(default=None, description="Description of the hotel [optional]")
+    website_url: str | None = Field(default=None, description="Website URL of the hotel [optional]")
+    display_photo_url: List[str] | None = Field(default=None, description="List of display photo URLs for the hotel [optional]")
+    instagram_handle: str | None = Field(default=None, description="Instagram handle of the hotel [optional]")
+    facebook_handle: str | None = Field(default=None, description="Facebook handle of the hotel [optional]")
+    twitter_handle: str | None = Field(default=None, description="Twitter handle of the hotel [optional]")
+
+    class Settings:
+        name = "hotel_profiles"
 
 
 class Hotel(BaseMongoModel):
     """Data model for Hotel information."""
     owner_id: str
     name: str
+    address: str | None = Field(default=None, description="Physical address of the hotel [optional]")
     email_address: str
     phone_number: str
     state: str
