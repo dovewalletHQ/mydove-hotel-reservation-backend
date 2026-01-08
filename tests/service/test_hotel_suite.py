@@ -1,15 +1,17 @@
 from app.services.hotel_suites import HotelSuiteService
 from app.models.hotel import HotelSuite
 from app.models.money import Money
+from tests.repository.test_hotel_repository import setup_new_hotel
 
 
 import pytest
 
 class TestHotelSuite:
     @pytest.mark.anyio
-    async def test_create_hotel_suite(self):
+    async def test_create_hotel_suite(self, setup_new_hotel):
+        hotel = setup_new_hotel
         data = {
-            "hotel_id": 1,
+            "hotel_id": str(hotel.id),
             "name": "Suite 1",
             "price": Money("100.00"),
             "description": "Description 1",
@@ -25,9 +27,10 @@ class TestHotelSuite:
         assert hotel_suite.facilities == data["facilities"]
     
     @pytest.mark.anyio
-    async def test_get_hotel_suite_by_id(self):
+    async def test_get_hotel_suite_by_id(self, setup_new_hotel):
+        hotel = setup_new_hotel
         data = {
-            "hotel_id": 1,
+            "hotel_id": str(hotel.id),
             "name": "Suite 1",
             "price": Money("100.00"),
             "description": "Description 1",
@@ -41,14 +44,19 @@ class TestHotelSuite:
         assert hotel_suite.description == data["description"]
         assert hotel_suite.room_number == data["room_number"]
         assert hotel_suite.facilities == data["facilities"]
+
+        fetched_hotel_suite = await HotelSuiteService.get_hotel_suite_by_id(hotel_suite.id)
+        assert fetched_hotel_suite.id == hotel_suite.id
+        assert fetched_hotel_suite.name == hotel_suite.name
     
     @pytest.mark.anyio
-    async def test_update_hotel_suite(self):
+    async def test_update_hotel_suite(self, setup_new_hotel):
+        hotel = setup_new_hotel
         data = {
-            "hotel_id": 1,
-            "name": "Suite 1",
+            "hotel_id": str(hotel.id),
+            "name": "Suite 100",
             "price": Money("100.00"),
-            "description": "Description 1",
+            "description": "Highly comfortable suite",
             "room_number": 1,
             "facilities": ["Playstation", "TV", "Air Conditioning", "Mini Bar", "Balcony", "Safe"]
         }
@@ -58,7 +66,7 @@ class TestHotelSuite:
         assert hotel_suite.price == data["price"]
         
         updated_data = {
-            "hotel_id": 1,
+            "hotel_id": str(hotel.id),
             "name": "Suite 2",
             "price": Money("200.00"),
             "description": "Description 2",
