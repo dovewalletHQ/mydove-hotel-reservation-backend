@@ -45,7 +45,7 @@ class TestHotelSuite:
         assert hotel_suite.room_number == data["room_number"]
         assert hotel_suite.facilities == data["facilities"]
 
-        fetched_hotel_suite = await HotelSuiteService.get_hotel_suite_by_id(hotel_suite.id)
+        fetched_hotel_suite = await HotelSuiteService.get_hotel_suite_by_id(str(hotel_suite.id))
         assert fetched_hotel_suite.id == hotel_suite.id
         assert fetched_hotel_suite.name == hotel_suite.name
     
@@ -74,6 +74,6 @@ class TestHotelSuite:
             "facilities": ["Playstation", "TV", "Air Conditioning", "Mini Bar", "Balcony", "Safe"]
         }
         updated_suite_input = HotelSuite(**updated_data)
-        updated_hotel_suite = await HotelSuiteService.update_hotel_suite(hotel_suite.id, updated_suite_input)
+        updated_hotel_suite = await HotelSuiteService.update_hotel_suite(str(hotel_suite.id), updated_suite_input)
         assert updated_hotel_suite.name == updated_data["name"]
         assert updated_hotel_suite.price == updated_data["price"]

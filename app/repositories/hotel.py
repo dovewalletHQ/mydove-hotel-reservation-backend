@@ -2,6 +2,7 @@ from typing import Union, Dict, Any, List
 
 from beanie.odm.operators.find.comparison import In
 from bson import ObjectId
+from datetime import datetime
 
 from app.models.hotel import HotelSuite, Hotel
 from app.core.logger import logger
@@ -62,7 +63,7 @@ class HotelRepository:
         """Get all available hotel suites by hotel id"""
         logger.info("Getting available hotel suites")
         try:
-            return await HotelSuite.find_all(HotelSuite.is_available == True, HotelSuite.hotel_id == str(hotel_id)).to_list()
+            return await HotelSuite.find(HotelSuite.is_available == True, HotelSuite.hotel_id == str(hotel_id)).to_list()
         except Exception as e:
             logger.error("Failed to get available hotel suites: %s", e)
             raise
@@ -72,7 +73,7 @@ class HotelRepository:
         """Get all unavailable hotel suites by hotel id"""
         logger.info("Getting unavailable hotel suites")
         try:
-            return await HotelSuite.find_all(HotelSuite.is_available == False, HotelSuite.hotel_id == str(hotel_id)).to_list()
+            return await HotelSuite.find(HotelSuite.is_available == False, HotelSuite.hotel_id == str(hotel_id)).to_list()
         except Exception as e:
             logger.error("Failed to get unavailable hotel suites: %s", e)
             raise
@@ -183,3 +184,82 @@ class HotelRepository:
         except Exception as e:
             logger.error("Failed to delete suite by room number: %s", e)
             raise
+
+    # =====================
+    # Merchant/Owner Methods
+    # =====================
+
+    @staticmethod
+    async def get_hotels_by_owner_id(owner_id: str) -> List[Hotel]:
+        """Get all hotels owned by a specific merchant/owner"""
+        if owner_id is None or not str(owner_id).strip():
+            raise ValueError("Invalid owner_id: owner_id cannot be None or empty")
+
+        logger.info("Getting hotels by owner id: %s", owner_id)
+        try:
+            return await Hotel.find(Hotel.owner_id == owner_id).to_list()
+        except Exception as e:
+            logger.error("Failed to get hotels by owner id: %s", e)
+            raise
+
+    @staticmethod
+    async def get_hotel_by_id(hotel_id: str) -> Union[Hotel, None]:
+        """Get a hotel by its ID"""
+        logger.info("Getting hotel by id: %s", hotel_id)
+        try:
+            return await Hotel.get(hotel_id)
+        except Exception as e:
+            logger.error("Failed to get hotel by id: %s", e)
+            return None
+
+    @staticmethod
+    async def update_hotel(hotel_id: str, update_data: dict) -> Hotel:
+        """Update hotel details"""
+        logger.info("Updating hotel: %s", hotel_id)
+        try:
+
+            hotel = await Hotel.get(hotel_id)
+            if not hotel:
+                raise ValueError("Hotel not found")
+
+            if not update_data:
+                raise ValueError("No data provided for update")
+
+            # Update fields
+            updated = False
+            for key, value in update_data.items():
+                if key in Hotel.model_fields and key not in ["id", "_id", "createdAt"]:
+                    setattr(hotel, key, value)
+                    updated = True
+
+            if not updated:
+                raise ValueError("No valid fields provided for update")
+
+            hotel.updatedAt = datetime.now()
+            await hotel.save()
+            return hotel
+        except ValueError:
+            raise
+        except Exception as e:
+            logger.error("Failed to update hotel: %s", e)
+            raise
+
+    @staticmethod
+    async def toggle_hotel_availability(hotel_id: str, is_open: bool) -> Hotel:
+        """Toggle hotel open/closed status for the day"""
+        logger.info("Toggling hotel availability: %s to %s", hotel_id, is_open)
+        try:
+            hotel = await Hotel.get(hotel_id)
+            if not hotel:
+                raise ValueError("Hotel not found")
+
+            hotel.is_open = is_open
+            hotel.updatedAt = datetime.now()
+            await hotel.save()
+            return hotel
+        except ValueError:
+            raise
+        except Exception as e:
+            logger.error("Failed to toggle hotel availability: %s", e)
+            raise
+

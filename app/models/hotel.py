@@ -62,6 +62,7 @@ class Hotel(BaseMongoModel):
     registration_type: str = Field(default="CAC", description="Type of registration, default is CAC")
     registration_image_link: str = Field(default=None, description="Link to the cloudinary/image site handler document")
     is_approved: bool = False
+    is_open: bool = Field(default=True, description="Whether the hotel is open for business today")
 
     class Settings:
         name = "hotel"
