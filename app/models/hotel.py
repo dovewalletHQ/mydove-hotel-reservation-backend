@@ -1,7 +1,7 @@
 import enum
 from typing import List
 
-from pydantic import Field
+from pydantic import Field, BaseModel
 
 from app.models.base import BaseMongoModel
 from app.models.money import Money
@@ -66,3 +66,16 @@ class Hotel(BaseMongoModel):
 
     class Settings:
         name = "hotel"
+
+
+class HotelResponse(BaseModel):
+    """Data model for Hotel response with profile."""
+    owner_id: str
+    name: str
+    address: str | None = Field(default=None, description="Physical address of the hotel [optional]")
+    email_address: str
+    phone_number: str
+    state: str
+    country: str
+    lga: str
+    is_open: bool = Field(default=True, description="Whether the hotel is open for business today")
