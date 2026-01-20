@@ -133,8 +133,8 @@ async def update_hotel(owner_id: str, hotel_id: str, request: HotelUpdateRequest
         update_data = request.model_dump(exclude_unset=True)
         hotel = await MerchantService.update_hotel_details(owner_id, hotel_id, update_data)
         return create_response(
-            status_code=status.http_status_code,
-            message="Hotel updated, waiting for admin approval",
+            status_code=status.HTTP_200_OK,
+            message="hotel updated successfully",
             data=hotel.model_dump()
         )
     except ValueError as e:
@@ -161,22 +161,42 @@ async def update_hotel(owner_id: str, hotel_id: str, request: HotelUpdateRequest
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Internal server error")
 
 
-@router.patch("/{owner_id}/hotels/{hotel_id}/availability", response_model=Hotel)
+@router.patch("/{owner_id}/hotels/{hotel_id}/availability")
 async def set_hotel_availability(owner_id: str, hotel_id: str, request: HotelAvailabilityRequest):
     """Set hotel availability (open/closed for business)"""
     try:
         hotel = await MerchantService.set_hotel_availability(owner_id, hotel_id, request.is_open)
-        return hotel
+        return create_response(
+            status_code=status.HTTP_200_OK,
+            message="hotel availability updated successfully",
+            data=hotel.model_dump()
+        )
     except ValueError as e:
         logger.warning("Failed to set hotel availability: %s", e)
         if "not found" in str(e).lower():
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+            error_response = create_response(
+                status_code=status.HTTP_404_NOT_FOUND,
+                message="hotel with id not found",
+            )
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=error_response)
         if "not authorized" in str(e).lower():
-            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=str(e))
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+            error_response = create_response(
+                status_code=status.HTTP_403_FORBIDDEN,
+                message="Opps! seems like you are not authorized to take this action for this hotel"
+            )
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=error_response)
+        error_response = create_response(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            message="Something went wrong while setting hotel availability",
+        )
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=error_response)
     except Exception as e:
         logger.error("Unexpected error setting hotel availability: %s", e)
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Internal server error")
+        error_response = create_response(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            message="Opps an error occurred. Try again"
+        )
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=error_response)
 
 
 # ====================
@@ -271,17 +291,37 @@ async def set_suite_availability(
         suite = await MerchantService.set_suite_availability(
             owner_id, hotel_id, suite_id, request.is_available
         )
-        return suite
+        return create_response(
+            status_code=status.HTTP_200_OK,
+            message="suite availability updated successfully",
+            data=suite.model_dump()
+        )
     except ValueError as e:
         logger.warning("Failed to set suite availability: %s", e)
         if "not found" in str(e).lower():
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+            error_response = create_response(
+                status_code=status.HTTP_404_NOT_FOUND,
+                message="suite or hotel not found",
+            )
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=error_response)
         if "not authorized" in str(e).lower():
-            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=str(e))
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+            error_response = create_response(
+                status_code=status.HTTP_403_FORBIDDEN,
+                message="Opps! seems like you are not authorized to take this action for this suite"
+            )
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=error_response)
+        error_response = create_response(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            message="Failed to set suite availability, error: {}".format(e),
+        )
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=error_response)
     except Exception as e:
         logger.error("Unexpected error setting suite availability: %s", e)
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Internal server error")
+        error_response = create_response(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            message="Opps an error occurred. Try again"
+        )
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=error_response)
 
 
 # ====================

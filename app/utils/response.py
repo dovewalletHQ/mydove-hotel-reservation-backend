@@ -1,7 +1,7 @@
 from typing import Any, Optional
 
 
-def create_response(status_code: int, message: str, data: Optional[Any| None] ) -> dict:
+def create_response(status_code: int, message: str, data: Optional[Any] = None) -> dict:
     """
     Create a standardized response dictionary.
 
