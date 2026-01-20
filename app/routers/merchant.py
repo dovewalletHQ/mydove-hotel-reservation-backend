@@ -9,6 +9,7 @@ from app.models.hotel import Hotel, HotelSuite
 from app.models.booking import Booking
 from app.services.merchant import MerchantService
 from app.core.logger import logger
+from app.utils.response import create_response
 
 router = APIRouter()
 
@@ -73,48 +74,88 @@ class SuiteAvailabilityRequest(BaseModel):
 # Hotel Management Endpoints
 # ====================
 
-@router.get("/{owner_id}/hotels", response_model=List[Hotel])
+@router.get("/{owner_id}/hotels")
 async def get_merchant_hotels(owner_id: str):
     """Get all hotels owned by a merchant"""
     try:
         hotels = await MerchantService.get_merchant_hotels(owner_id)
-        return hotels
+        return create_response(
+            status_code=status.HTTP_200_OK,
+            message="list of owned hotels",
+            data=hotels
+        )
     except ValueError as e:
         logger.warning("Failed to get merchant hotels: %s", e)
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+        error_response = create_response(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            message="Failed to get merchant hotels, error: {}".format(e),
+        )
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=error_response)
     except Exception as e:
         logger.error("Unexpected error getting merchant hotels: %s", e)
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Internal server error")
+        error_response = create_response(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            message="Opps an error occurred. Try again"
+        )
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=error_response)
 
 
-@router.post("/{owner_id}/hotels", response_model=Hotel, status_code=status.HTTP_201_CREATED)
+@router.post("/{owner_id}/hotels", status_code=status.HTTP_201_CREATED)
 async def create_hotel(owner_id: str, request: HotelCreateRequest):
     """Create a new hotel for a merchant"""
     try:
         hotel = await MerchantService.create_hotel(owner_id, request.model_dump())
-        return hotel
+        return create_response(
+            status_code=status.HTTP_201_CREATED,
+            message="New hotel added, waiting for admin approval",
+            data=hotel.model_dump()
+        )
     except ValueError as e:
         logger.warning("Failed to create hotel: %s", e)
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+        error_response = create_response(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            message="Failed to create hotel, error: {}".format(e),
+        )
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=error_response)
     except Exception as e:
         logger.error("Unexpected error creating hotel: %s", e)
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Internal server error")
+        error_response = create_response(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            message="Opps an error occurred. Try again"
+        )
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=error_response)
 
 
-@router.patch("/{owner_id}/hotels/{hotel_id}", response_model=Hotel)
+@router.patch("/{owner_id}/hotels/{hotel_id}")
 async def update_hotel(owner_id: str, hotel_id: str, request: HotelUpdateRequest):
     """Update a hotel owned by a merchant"""
     try:
         update_data = request.model_dump(exclude_unset=True)
         hotel = await MerchantService.update_hotel_details(owner_id, hotel_id, update_data)
-        return hotel
+        return create_response(
+            status_code=status.http_status_code,
+            message="Hotel updated, waiting for admin approval",
+            data=hotel.model_dump()
+        )
     except ValueError as e:
         logger.warning("Failed to update hotel: %s", e)
         if "not found" in str(e).lower():
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+            error_response = create_response(
+                status_code=status.HTTP_404_NOT_FOUND,
+                message="hotel with id not found",
+            )
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=error_response)
         if "not authorized" in str(e).lower():
-            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=str(e))
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+            error_response = create_response(
+                status_code=status.HTTP_403_FORBIDDEN,
+                message="Opps! seems like you are not authorized to take this action for this hotel"
+            )
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=error_response)
+        error_response = create_response(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            message="Something went wrong while updating hotel details",
+        )
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=error_response)
     except Exception as e:
         logger.error("Unexpected error updating hotel: %s", e)
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Internal server error")

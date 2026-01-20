@@ -250,7 +250,7 @@ class MerchantService:
             is_open=True
         )
 
-        logger.info("Creating hotel for merchant %s: %s", owner_id, hotel.name)
+        logger.info("Creating hotel for merchant %s: %s", owner_id[:4], hotel.name)
         return await HotelRepository.create_hotel(hotel)
 
     @staticmethod
