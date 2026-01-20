@@ -3,11 +3,25 @@ from app.models.hotel import HotelProfile
 from app.core.logger import logger
 from typing import Union
 
+from app.services.hotel import HotelService
+
+
 class HotelProfileService:
     @staticmethod
     async def create_hotel_profile(hotel_profile: HotelProfile) -> Union[HotelProfile, str]:
         if hotel_profile is None:
+            logger.warning("Invalid hotel profile: %s", hotel_profile)
             return "Invalid hotel profile"
+        # check if the hotel id is valid
+        hotel = await HotelService.get_hotel_by_id(hotel_profile.hotel_id)
+        if hotel is None:
+            logger.warning("Invalid hotel id: %s", hotel_profile.hotel_id)
+            return "Invalid hotel id"
+        # check if hotel profile already exists
+        existing_profile = await HotelProfileRepository.get_hotel_profile_by_hotel_id(hotel_profile.hotel_id)
+        if existing_profile is not None:
+            logger.warning("Hotel profile already exists: %s", hotel_profile.hotel_id[:5] + "...")
+            return "Hotel profile already exists"
         logger.info("Creating hotel profile: %s", hotel_profile.hotel_id[:5] + "...")
         return await HotelProfileRepository.create_hotel_profile(hotel_profile)
     
