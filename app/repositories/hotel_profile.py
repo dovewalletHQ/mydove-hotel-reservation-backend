@@ -10,7 +10,7 @@ class HotelProfileRepository:
     @staticmethod
     async def create_hotel_profile(hotel_profile: HotelProfile) -> Union[HotelProfile | None]:
         """Create hotel profile"""
-        logger.info("Creating hotel profile: %s", hotel_profile)
+        logger.info("Creating hotel profile: %s", hotel_profile.hotel_id[:5] + "...")
         return await hotel_profile.save()
     
     @staticmethod

@@ -8,7 +8,7 @@ class HotelProfileService:
     async def create_hotel_profile(hotel_profile: HotelProfile) -> Union[HotelProfile, str]:
         if hotel_profile is None:
             return "Invalid hotel profile"
-        logger.info("Creating hotel profile: %s", hotel_profile)
+        logger.info("Creating hotel profile: %s", hotel_profile.hotel_id[:5] + "...")
         return await HotelProfileRepository.create_hotel_profile(hotel_profile)
     
     @staticmethod
@@ -22,7 +22,7 @@ class HotelProfileService:
     async def update_hotel_profile(hotel_profile: HotelProfile) -> Union[HotelProfile, str]:
         if hotel_profile is None:
             return "Invalid hotel profile"
-        logger.info("Updating hotel profile: %s", hotel_profile)
+        logger.info("Updating hotel profile: %s", hotel_profile.hotel_id[:5] + "...")
         return await HotelProfileRepository.update_hotel_profile(hotel_profile)
     
     @staticmethod
