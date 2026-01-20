@@ -44,6 +44,7 @@ class BaseMongoModel(Document):
     model_config = ConfigDict(
         populate_by_name=True,
         arbitrary_types_allowed=True,
+        json_encoders={BsonObjectId: str, PyObjectId: str},
     )
 
     def __init__(self, *args, **kwargs):
@@ -51,3 +52,13 @@ class BaseMongoModel(Document):
         # Ensure updatedAt is refreshed on instantiation if not provided
         if "updatedAt" not in kwargs:
             self.updatedAt = datetime.now()
+
+    def model_dump(self, **kwargs):
+        """Override to ensure ObjectId is serialized as string."""
+        data = super().model_dump(**kwargs)
+        # Convert ObjectId fields to strings
+        if 'id' in data and isinstance(data['id'], (BsonObjectId, PyObjectId)):
+            data['id'] = str(data['id'])
+        if '_id' in data and isinstance(data['_id'], (BsonObjectId, PyObjectId)):
+            data['_id'] = str(data['_id'])
+        return data
