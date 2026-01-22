@@ -19,6 +19,7 @@ class RoomType(str, enum.Enum):
     SILVER = "Silver"
     BRONZE = "Bronze"
     FAMILY = "Family"
+    Executive = "Executive"
     
 
 class HotelSuite(BaseMongoModel):
