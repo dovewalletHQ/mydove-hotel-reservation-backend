@@ -266,6 +266,14 @@ class MerchantService:
         # Verify ownership
         await MerchantService._verify_hotel_ownership(owner_id, hotel_id)
 
+        # check if suite room number is already taken in the hotel
+        existing_suite = await HotelRepository.get_suite_by_room_number(
+            suite_data.get("room_number"),
+            hotel_id
+        )
+        if existing_suite:
+            raise ValueError("Suite with this room number already exists in the hotel")
+
         suite = HotelSuite(
             hotel_id=hotel_id,
             name=suite_data.get("name"),

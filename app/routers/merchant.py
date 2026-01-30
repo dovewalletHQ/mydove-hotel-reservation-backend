@@ -248,7 +248,7 @@ async def create_suite(owner_id: str, hotel_id: str, request: SuiteCreateRequest
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=error_response)
         error_response = create_response(
             status_code=status.HTTP_400_BAD_REQUEST,
-            message="Failed to create suite, error: {}".format(e),
+            message=str(e),
         )
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=error_response)
     except Exception as e:
