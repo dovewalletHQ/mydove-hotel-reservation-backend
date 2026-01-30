@@ -24,7 +24,7 @@ class HotelRepository:
         if not hotel.is_approved:
             raise ValueError("Hotel owner is not approved")
 
-        logger.info("Creating hotel suite: %s", hotel_suite)
+        logger.info("Creating hotel suite")
         return await hotel_suite.save()
 
     @staticmethod
