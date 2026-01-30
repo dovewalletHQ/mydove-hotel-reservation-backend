@@ -4,6 +4,7 @@ from datetime import datetime
 from typing import Dict, List, Any
 
 from app.core.logger import setup_logger
+from app.models import Money
 from app.repositories.booking import BookingRepository
 from app.repositories.hotel import HotelRepository
 from app.models.booking import Booking, BookingType, BookingStatus
@@ -62,8 +63,9 @@ class BookingService:
             check_in_date=check_in_date,
             check_out_date=check_out_date,
             booking_type=booking_data.get("booking_type", BookingType.ONLINE),
-            status=BookingStatus.PENDING,
+            status=BookingStatus.CONFIRMED,
             total_amount=booking_data.get("total_amount"),
+            discount_amount=booking_data.get("discount_amount", Money("0")),
             number_of_guests=booking_data.get("number_of_guests", 1),
             special_requests=booking_data.get("special_requests")
         )
@@ -249,4 +251,12 @@ class BookingService:
     ) -> bool:
         """Check if a suite is available for the given dates"""
         return await BookingRepository.check_suite_availability(suite_id, check_in, check_out)
+
+    @staticmethod
+    async def get_bookings_by_guest_phone(guest_phone: str) -> List[Booking]:
+        """Get all bookings for a guest by their phone number"""
+        if not guest_phone or not guest_phone.strip():
+            raise ValueError("Invalid guest phone number")
+
+        return await BookingRepository.get_bookings_by_guest_phone(guest_phone)
 

@@ -42,6 +42,19 @@ class BookingRepository:
             raise
 
     @staticmethod
+    async def get_bookings_by_guest_phone(guest_phone: str) -> List[Booking]:
+        """Get all bookings for a specific guest phone number"""
+        if not guest_phone or not guest_phone.strip():
+            raise ValueError("Invalid guest_phone: guest_phone cannot be None or empty")
+
+        logger.info("Getting bookings for guest phone: %s", guest_phone)
+        try:
+            return await Booking.find(Booking.guest_phone == guest_phone).to_list()
+        except Exception as e:
+            logger.error("Failed to get bookings by guest phone: %s", e)
+            raise ValueError("Error retrieving bookings for guest")
+
+    @staticmethod
     async def get_bookings_by_suite_id(suite_id: str) -> List[Booking]:
         """Get all bookings for a specific suite"""
         if not suite_id or not suite_id.strip():
