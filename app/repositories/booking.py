@@ -27,6 +27,16 @@ class BookingRepository:
         except Exception as e:
             logger.error("Failed to get booking by id: %s", e)
             return None
+    
+    @staticmethod
+    async def get_booking_by_suite_id(suite_id: str) -> Optional[Booking]:
+        """Get a booking by its suite_id"""
+        logger.info("Getting booking by suite_id: %s", suite_id)
+        try:
+            return await Booking.find_one(Booking.suite_id == suite_id)
+        except Exception as e:
+            logger.error("Failed to get booking by suite_id: %s", e)
+            return None
 
     @staticmethod
     async def get_bookings_by_hotel_id(hotel_id: str) -> List[Booking]:

@@ -41,8 +41,8 @@ class BookingService:
         if not suite:
             raise ValueError("Suite not found")
 
-        if not suite.is_available:
-            raise ValueError("Suite is not available")
+        # if not suite.is_available:
+        #     raise ValueError("Suite is not available")
 
         # Check for date conflicts
         is_available = await BookingRepository.check_suite_availability(
@@ -260,3 +260,10 @@ class BookingService:
 
         return await BookingRepository.get_bookings_by_guest_phone(guest_phone)
 
+    @staticmethod
+    async def get_booking_by_suite_id(suite_id: str) -> Booking:
+        """Get booking for a suite by its suite_id"""
+        if not suite_id or not suite_id.strip():
+            raise ValueError("Invalid suite_id")
+
+        return await BookingRepository.get_booking_by_suite_id(suite_id)
