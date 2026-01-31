@@ -153,6 +153,8 @@ class MerchantService:
 
         # Get all hotels owned by the merchant
         hotels = await HotelRepository.get_hotels_by_owner_id(owner_id)
+        if not hotels:
+            raise ValueError("No hotels found for merchant")
 
         total_bookings = 0
         completed_bookings = 0

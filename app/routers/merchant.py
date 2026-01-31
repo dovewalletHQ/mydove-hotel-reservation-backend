@@ -88,7 +88,7 @@ async def get_merchant_hotels(owner_id: str):
         logger.warning("Failed to get merchant hotels: %s", e)
         error_response = create_response(
             status_code=status.HTTP_400_BAD_REQUEST,
-            message="Failed to get merchant hotels, error: {}".format(e),
+            message=str(e),
         )
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=error_response)
     except Exception as e:
@@ -397,7 +397,6 @@ async def get_merchant_bookings(owner_id: str):
         )
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=error_response)
 
-
 @router.get("/{owner_id}/hotels/{hotel_id}/bookings")
 async def get_merchant_hotel_bookings(owner_id: str, hotel_id: str):
     """Get all bookings for a specific hotel owned by a merchant"""
@@ -450,7 +449,7 @@ async def get_merchant_revenue_summary(owner_id: str) -> Dict[str, Any]:
         logger.warning("Failed to get revenue summary: %s", e)
         error_response = create_response(
             status_code=status.HTTP_400_BAD_REQUEST,
-            message="Failed to get revenue summary, error: {}".format(e),
+            message=str(e),
         )
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=error_response)
     except Exception as e:
