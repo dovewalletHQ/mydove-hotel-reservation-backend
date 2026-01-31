@@ -20,7 +20,7 @@ class HotelSuiteCreateRequest(BaseModel):
     name: str = Field(..., min_length=1, max_length=255)
     description: Optional[str] = None
     price: Decimal = Field(..., gt=0)
-    currency: str = Field(default="USD", min_length=3, max_length=3)
+    currency: str = Field(default="NGN", min_length=3, max_length=3)
     capacity: int = Field(default=2, ge=1)
     facilities: Optional[List[str]] = None
     images: Optional[List[str]] = None
@@ -37,21 +37,33 @@ class HotelSuiteUpdateRequest(BaseModel):
     is_available: Optional[bool] = None
 
 
-@router.post("", response_model=HotelSuite, status_code=status.HTTP_201_CREATED)
+@router.post("", status_code=status.HTTP_201_CREATED)
 async def create_hotel_suite(request: HotelSuiteCreateRequest):
     """Create a new hotel suite."""
     try:
         data = request.model_dump()
-        # Convert price and currency to Money type
-        data["price"] = Money(amount=data.pop("price"), currency=data.pop("currency"))
+        # Convert price to Money type
+        data["price"] = Money(data.pop("price"))
         suite = await HotelSuiteService.create_hotel_suite(HotelSuite(**data))
-        return suite
+        return create_response(
+            status_code=status.HTTP_201_CREATED,
+            message="Hotel suite created successfully",
+            data=suite,
+        )
     except ValueError as e:
         logger.warning("Failed to create hotel suite: %s", e)
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+        error_response = create_response(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            message=str(e),
+        )
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=error_response)
     except Exception as e:
         logger.error("Unexpected error creating hotel suite: %s", e)
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Internal server error")
+        error_response = create_response(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            message="Internal server error",
+        )
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=error_response)
 
 
 @router.get("")
@@ -77,7 +89,7 @@ async def get_all_suites(
         logger.warning("Failed to get all suites: %s", e)
         error_response = create_response(
             status_code=status.HTTP_400_BAD_REQUEST,
-            message="Failed to get all suites, error: {}".format(e),
+            message=str(e),
         )
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=error_response)
     except Exception as e:
@@ -94,8 +106,6 @@ async def get_suite_by_id(suite_id: str):
     """Get a hotel suite by ID."""
     try:
         suite = await HotelSuiteService.get_hotel_suite_by_id(suite_id)
-        if not suite:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Suite not found")
         return create_response(
             status_code=status.HTTP_200_OK,
             message="Suite retrieved successfully",
@@ -152,9 +162,10 @@ async def update_suite(suite_id: str, request: HotelSuiteUpdateRequest):
             if not existing_suite:
                 raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Suite not found")
 
-            price = update_data.pop("price", existing_suite.price.amount)
-            currency = update_data.pop("currency", existing_suite.price.currency)
-            update_data["price"] = Money(amount=price, currency=currency)
+            price = update_data.pop("price", existing_suite.price)
+            currency = update_data.pop("currency", existing_suite.currency)
+            update_data["price"] = Money(price)
+            update_data['currency'] = currency
 
         suite = await HotelSuiteService.update_hotel_suite(suite_id, update_data)
         if not suite:
@@ -209,15 +220,18 @@ async def toggle_suite_availability(suite_id: str, is_available: bool):
     """Toggle suite availability."""
     try:
         suite = await HotelSuiteService.update_suite(suite_id, {"is_available": is_available})
-        if not suite:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Suite not found")
         return create_response(
             status_code=status.HTTP_200_OK,
             message="Suite availability toggled successfully",
             data=suite
         )
-    except HTTPException:
-        raise
+    except ValueError as e:
+        logger.warning("Failed to toggle suite availability: %s", e)
+        error_response = create_response(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            message=str(e),
+        )
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=error_response)
     except Exception as e:
         logger.error("Unexpected error toggling suite availability: %s", e)
         error_response = create_response(
@@ -237,8 +251,6 @@ async def book_suite(req: HotelSuiteBookingRequest):
             message="Suite booked successfully",
             data=suite
         )
-    except HTTPException:
-        raise
     except ValueError as e:
         logger.error("Error booking suite with id '%s': %s", req.suite_id[:7], e)
         error_response = create_response(

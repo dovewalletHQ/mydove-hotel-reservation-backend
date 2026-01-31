@@ -56,7 +56,7 @@ class HotelRepository:
             return await HotelSuite.find().to_list()
         except Exception as e:
             logger.error("Failed to get all hotel suites: %s", e)
-            raise
+            raise ValueError("Failed to get all hotel suites")
 
     @staticmethod
     async def get_available_hotel_suites_by_hotel_id(hotel_id: str) -> List[HotelSuite]:

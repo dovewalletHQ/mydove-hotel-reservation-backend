@@ -27,6 +27,7 @@ class HotelSuite(BaseMongoModel):
     name: str = Field(..., min_length=1)
     price: Money = Field(...,gt=0, alias="price")
     description: str = Field(..., min_length=1)
+    currency: str = Field(default="NGN", min_length=1)
     room_number: int = Field(...,gt=0)
     room_type: RoomType = Field(default=RoomType.REGULAR, min_length=1)
     facilities: List[str] = Field(default=[], description="List of facilities available in the room [optional]")

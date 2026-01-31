@@ -119,9 +119,17 @@ class HotelSuiteService:
             if suite is None:
                 logger.error("Suite with id '%s' not found", suite_id)
                 raise ValueError("Suite not found")
-            if not suite.is_available:
-                    logger.error("Suite with id '%s' is not available", suite_id)
-                    raise ValueError("Suite not available")
+            # check if the checking date is before the checkout date
+            if request.check_in_date >= request.check_out_date:
+                logger.error("Check-in date must be before check-out date")
+                raise ValueError("Check-in date must be before check-out date")
+            # check if there's a current booking but the new check-in date is before the current booking's check-out date
+            booking = await BookingService.get_booking_by_suite_id(suite_id)
+            if booking is not None:
+                if request.check_in_date < booking.check_out_date:
+                    logger.error("Check-in date must be after the current booking's check-out date")
+                    raise ValueError("Check-in date must be after the current booking's check-out date")
+
             # booking suite for user
             booking = await BookingService.create_booking(request.model_dump())
             if booking is None:
