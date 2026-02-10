@@ -192,7 +192,6 @@ async def update_suite(suite_id: str, request: HotelSuiteUpdateRequest):
         )
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=error_response)
 
-
 @router.delete("/{suite_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_suite(suite_id: str):
     """Delete a hotel suite."""
@@ -240,6 +239,10 @@ async def toggle_suite_availability(suite_id: str, is_available: bool):
         )
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=error_response)
 
+
+# ===========================================
+# Booking Endpoints
+# ===========================================
 
 @router.post("/users/bookings")
 async def book_suite(req: HotelSuiteBookingRequest):

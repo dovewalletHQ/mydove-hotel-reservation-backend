@@ -1,4 +1,4 @@
-from typing import Union, Dict, Any, List
+from typing import Union, Dict, Any, List, Optional
 
 from beanie.odm.operators.find.comparison import In
 from bson import ObjectId
@@ -14,6 +14,38 @@ class HotelRepository:
     async def create_hotel(hotel: Hotel) -> Hotel:
         logger.info("Creating hotel: %s", hotel)
         return await hotel.save()
+
+    @staticmethod
+    async def get_hotels(
+        skip: int,
+        limit: int,
+        is_approved: Optional[bool] = None,
+        is_open: Optional[bool] = None,
+        state: Optional[str] = None,
+        lga: Optional[str] = None,
+    ) -> List[Hotel]:
+        """Get all hotels with optional filtering and pagination"""
+        logger.info("Getting all hotels with filters: skip=%s, limit=%s", skip, limit)
+        
+        query_filters = []
+        if is_approved is not None:
+            query_filters.append(Hotel.is_approved == is_approved)
+        if is_open is not None:
+            query_filters.append(Hotel.is_open == is_open)
+        if state:
+            query_filters.append(Hotel.state == state)
+        if lga:
+            query_filters.append(Hotel.lga == lga)
+        if city:
+            query_filters.append(Hotel.city == city)
+            
+        try:
+            if query_filters:
+                return await Hotel.find(*query_filters).skip(skip).limit(limit).to_list()
+            return await Hotel.find_all().skip(skip).limit(limit).to_list()
+        except Exception as e:
+            logger.error("Failed to fetch hotels: %s", e)
+            raise
 
     @staticmethod
     async def create_hotel_suite(hotel_suite: HotelSuite) -> HotelSuite:
@@ -112,18 +144,18 @@ class HotelRepository:
             raise
 
     @staticmethod
-    async def delete_hotel_suite(id: str) -> HotelSuite:
+    async def delete_hotel_suite(suite_id: str) -> HotelSuite:
         """Delete Hotel suite using the suite id"""
-        logger.info("Deleting hotel suite: %s", id)
+        logger.info("Deleting hotel suite: %s", suite_id[:7])
         try:
-            hotel_suite = await HotelSuite.get(id)
+            hotel_suite = await HotelSuite.get(suite_id)
             if not hotel_suite:
                 raise ValueError("Hotel suite not found")
             await hotel_suite.delete()
             return hotel_suite
         except Exception as e:
             logger.error("Failed to delete hotel suite: %s", e)
-            raise
+            raise ValueError("Failed to delete hotel suite")
 
     @staticmethod
     async def get_hotel_owner_by_hotel_id(id: str) -> Hotel:

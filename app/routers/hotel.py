@@ -55,22 +55,30 @@ async def create_hotel(request: HotelCreateRequest):
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=error_response)
 
 
-@router.get("", response_model=List[Hotel])
+@router.get("")
 async def get_all_hotels(
     skip: int = Query(0, ge=0),
     limit: int = Query(40, ge=1, le=100),
     is_approved: Optional[bool] = None,
     is_available: Optional[bool] = None,
+    lga: Optional[str] = None,
+    state: Optional[str] = None,
 ):
     """Get all hotels with optional filtering."""
     try:
-        hotels = await HotelService.get_all_hotels()
-        # Apply filters if provided
-        if is_approved is not None:
-            hotels = [h for h in hotels if h.is_approved == is_approved]
-        if is_available is not None:
-            hotels = [h for h in hotels if h.is_available == is_available]
-        return hotels[skip : skip + limit]
+        hotels = await HotelService.get_all_hotels(
+            skip=skip,
+            limit=limit,
+            is_approved=is_approved,
+            is_open=is_available,
+            state=state,
+            lga=lga,
+        )
+        return create_response(
+            status_code=status.HTTP_200_OK,
+            message="Hotels retrieved successfully",
+            data=hotels,
+        )
     except Exception as e:
         logger.error("Unexpected error fetching hotels: %s", e)
         error_response = create_response(
@@ -86,7 +94,11 @@ async def get_hotel(hotel_id: str):
     try:
         hotel = await HotelService.get_hotel_by_id(hotel_id)
         if not hotel:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Hotel not found")
+            error_response = create_response(
+                status_code=status.HTTP_404_NOT_FOUND,
+                message="Hotel not found",
+            )
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=error_response)
         response_data = HotelResponse(**hotel.model_dump())
         return create_response(
             status_code=status.HTTP_200_OK,

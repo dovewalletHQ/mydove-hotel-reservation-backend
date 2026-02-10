@@ -26,10 +26,24 @@ class HotelService:
         return await HotelRepository.create_hotel(hotel)
 
     @staticmethod
-    async def get_all_hotels() -> List[Hotel]:
-        """Get all hotels"""
-        logger.info("Getting all hotels")
-        return await Hotel.find_all().to_list()
+    async def get_all_hotels(
+        skip: int = 0,
+        limit: int = 40,
+        is_approved: Optional[bool] = None,
+        is_open: Optional[bool] = None,
+        state: Optional[str] = None,
+        lga: Optional[str] = None,
+    ) -> List[Hotel]:
+        """Get all hotels with filters"""
+        logger.info("Getting all hotels with filters")
+        return await HotelRepository.get_hotels(
+            skip=skip,
+            limit=limit,
+            is_approved=is_approved,
+            is_open=is_open,
+            state=state,
+            lga=lga,
+        )
 
     @staticmethod
     async def get_hotel_by_id(hotel_id: str) -> Optional[Hotel]:

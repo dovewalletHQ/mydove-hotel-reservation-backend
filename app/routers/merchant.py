@@ -260,26 +260,42 @@ async def create_suite(owner_id: str, hotel_id: str, request: SuiteCreateRequest
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=error_response)
 
 
-@router.patch("/{owner_id}/hotels/{hotel_id}/suites/{suite_id}", response_model=HotelSuite)
+@router.patch("/{owner_id}/hotels/{hotel_id}/suites/{suite_id}")
 async def update_suite(owner_id: str, hotel_id: str, suite_id: str, request: SuiteUpdateRequest):
     """Update a suite in a merchant's hotel"""
     try:
         update_data = request.model_dump(exclude_unset=True)
         suite = await MerchantService.update_suite(owner_id, hotel_id, suite_id, update_data)
-        return suite
+        return create_response(
+            status_code=status.HTTP_200_OK,
+            message="suite updated successfully",
+            data=suite
+        )
     except ValueError as e:
         logger.warning("Failed to update suite: %s", e)
         if "not found" in str(e).lower():
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+            error_response = create_response(
+                status_code=status.HTTP_404_NOT_FOUND,
+                message="hotel with id not found",
+            )
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=error_response)
         if "not authorized" in str(e).lower():
-            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=str(e))
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+            error_response = create_response(
+                status_code=status.HTTP_403_FORBIDDEN,
+                message="Opps! seems like you are not authorized to take this action for this hotel"
+            )
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=error_response)
+        error_response = create_response(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            message=str(e),
+        )
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=error_response)
     except Exception as e:
         logger.error("Unexpected error updating suite: %s", e)
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Internal server error")
 
 
-@router.delete("/{owner_id}/hotels/{hotel_id}/suites/{suite_id}", response_model=HotelSuite)
+@router.delete("/{owner_id}/hotels/{hotel_id}/suites/{suite_id}")
 async def delete_suite(owner_id: str, hotel_id: str, suite_id: str):
     """Delete a suite from a merchant's hotel"""
     try:

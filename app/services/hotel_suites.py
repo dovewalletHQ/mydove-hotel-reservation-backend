@@ -77,6 +77,18 @@ class HotelSuiteService:
         if room_number is None or hotel_id is None:
             raise ValueError("Invalid room number or hotel id")
         return await HotelRepository.get_suite_by_room_number(room_number, hotel_id)
+
+    @staticmethod
+    async def delete_suite_by_id(suite_id: str) -> None:
+        """Delete a hotel suite by its id"""
+        if suite_id is None or not suite_id.strip():
+            raise ValueError("Invalid suite id: suite id cannot be None or empty")
+        try:
+            logger.info("Deleting suite with id %s", suite_id)
+            await HotelRepository.delete_hotel_suite(suite_id)
+        except Exception as e:
+            logger.error("Error deleting suite with id %s: %s", suite_id, e)
+            raise
     
     @staticmethod
     async def delete_suite_by_room_number(room_number: int, hotel_id: str) -> None:
