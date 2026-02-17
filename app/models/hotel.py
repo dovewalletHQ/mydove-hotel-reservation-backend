@@ -1,5 +1,6 @@
 import enum
-from typing import List
+from typing import List, Optional, Any, Dict
+from pymongo import IndexModel, GEOSPHERE
 
 from pydantic import Field, BaseModel
 
@@ -55,19 +56,24 @@ class Hotel(BaseMongoModel):
     """Data model for Hotel information."""
     owner_id: str
     name: str
-    address: str | None = Field(default=None, description="Physical address of the hotel [optional]")
     email_address: str
     phone_number: str
     state: str
     country: str
     lga: str
+    address: str | None = Field(default=None, description="Physical address of the hotel [optional]")
     registration_type: str = Field(default="CAC", description="Type of registration, default is CAC")
-    registration_image_link: str = Field(default=None, description="Link to the cloudinary/image site handler document")
+    registration_image_link: str | None = Field(default=None, description="Link to the cloudinary/image site handler document")
     is_approved: bool = False
     is_open: bool = Field(default=True, description="Whether the hotel is open for business today")
+    city: str | None = Field(default=None, description="City of the hotel [optional]")
+    location: Optional[Dict[str, Any]] = Field(default=None, description="GeoJSON Point: {type: 'Point', coordinates: [lon, lat]}")
 
     class Settings:
         name = "hotel"
+        indexes = [
+            IndexModel([("location", GEOSPHERE)]),
+        ]
 
 
 class HotelResponse(BaseModel):

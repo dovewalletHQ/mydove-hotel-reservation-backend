@@ -33,6 +33,10 @@ class HotelService:
         is_open: Optional[bool] = None,
         state: Optional[str] = None,
         lga: Optional[str] = None,
+        city: Optional[str] = None,
+        latitude: Optional[float] = None,
+        longitude: Optional[float] = None,
+        radius_km: Optional[float] = 10.0,
     ) -> List[Hotel]:
         """Get all hotels with filters"""
         logger.info("Getting all hotels with filters")
@@ -43,6 +47,10 @@ class HotelService:
             is_open=is_open,
             state=state,
             lga=lga,
+            city=city,
+            latitude=latitude,
+            longitude=longitude,
+            radius_km=radius_km,
         )
 
     @staticmethod

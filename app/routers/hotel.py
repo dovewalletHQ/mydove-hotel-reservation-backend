@@ -15,9 +15,24 @@ class HotelCreateRequest(BaseModel):
     name: str = Field(..., min_length=1, max_length=255)
     owner_id: str = Field(...)
     address: Optional[str] = None
-    city: Optional[str] = None
-    country: Optional[str] = None
+    city: str = Field(...)
+    state: str = Field(...)
+    country: str = Field(...)
     description: Optional[str] = None
+    latitude: Optional[float] = Field(None, ge=-90, le=90, description="Latitude of the hotel")
+    longitude: Optional[float] = Field(None, ge=-180, le=180, description="Longitude of the hotel")
+
+    def model_dump(self, *args, **kwargs):
+        data = super().model_dump(*args, **kwargs)
+        if hasattr(self, 'latitude') and hasattr(self, 'longitude') and self.latitude is not None and self.longitude is not None:
+             data['location'] = {
+                "type": "Point",
+                "coordinates": [self.longitude, self.latitude]
+            }
+             # Remove lat/long from data as they are now in location
+             data.pop('latitude', None)
+             data.pop('longitude', None)
+        return data
 
 
 class HotelUpdateRequest(BaseModel):
@@ -27,6 +42,20 @@ class HotelUpdateRequest(BaseModel):
     country: Optional[str] = None
     description: Optional[str] = None
     is_available: Optional[bool] = None
+    latitude: Optional[float] = Field(None, ge=-90, le=90, description="Latitude of the hotel")
+    longitude: Optional[float] = Field(None, ge=-180, le=180, description="Longitude of the hotel")
+
+    def model_dump(self, *args, **kwargs):
+        data = super().model_dump(*args, **kwargs)
+        if hasattr(self, 'latitude') and hasattr(self, 'longitude') and self.latitude is not None and self.longitude is not None:
+             data['location'] = {
+                "type": "Point",
+                "coordinates": [self.longitude, self.latitude]
+            }
+             # Remove lat/long from data as they are now in location
+             data.pop('latitude', None)
+             data.pop('longitude', None)
+        return data
 
 
 @router.post("", status_code=status.HTTP_201_CREATED)
@@ -63,8 +92,16 @@ async def get_all_hotels(
     is_available: Optional[bool] = None,
     lga: Optional[str] = None,
     state: Optional[str] = None,
+    city: Optional[str] = None,
+    # Geospatial search params
+    latitude: Optional[float] = Query(None, ge=-90, le=90, description="Latitude for proximity search"),
+    longitude: Optional[float] = Query(None, ge=-180, le=180, description="Longitude for proximity search"),
+    radius_km: Optional[float] = Query(10.0, gt=0, description="Search radius in kilometers"),
 ):
-    """Get all hotels with optional filtering."""
+    """Get all hotels with optional filtering.
+    
+    For geospatial search, provide both latitude and longitude.
+    """
     try:
         hotels = await HotelService.get_all_hotels(
             skip=skip,
@@ -73,6 +110,10 @@ async def get_all_hotels(
             is_open=is_available,
             state=state,
             lga=lga,
+            city=city,
+            latitude=latitude,
+            longitude=longitude,
+            radius_km=radius_km
         )
         return create_response(
             status_code=status.HTTP_200_OK,

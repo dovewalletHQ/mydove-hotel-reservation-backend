@@ -23,6 +23,10 @@ class HotelRepository:
         is_open: Optional[bool] = None,
         state: Optional[str] = None,
         lga: Optional[str] = None,
+        city: Optional[str] = None,
+        latitude: Optional[float] = None,
+        longitude: Optional[float] = None,
+        radius_km: Optional[float] = 10.0,
     ) -> List[Hotel]:
         """Get all hotels with optional filtering and pagination"""
         logger.info("Getting all hotels with filters: skip=%s, limit=%s", skip, limit)
@@ -40,6 +44,29 @@ class HotelRepository:
             query_filters.append(Hotel.city == city)
             
         try:
+            # Geospatial search if coordinates are provided
+            if latitude is not None and longitude is not None:
+                # Beanie/MongoDB geospatial query using $nearSphere
+                # Note: MongoDB requires meters for $maxDistance with 2dsphere index on GeoJSON points
+                radius_meters = radius_km * 1000
+                
+                # Construct the geospatial query
+                geo_query = {
+                    "location": {
+                        "$nearSphere": {
+                            "$geometry": {
+                                "type": "Point",
+                                "coordinates": [longitude, latitude]
+                            },
+                            "$maxDistance": radius_meters
+                        }
+                    }
+                }
+                
+                # Combine geospatial query with other filters
+                find_query = Hotel.find(geo_query, *query_filters)
+                return await find_query.skip(skip).limit(limit).to_list()
+
             if query_filters:
                 return await Hotel.find(*query_filters).skip(skip).limit(limit).to_list()
             return await Hotel.find_all().skip(skip).limit(limit).to_list()
