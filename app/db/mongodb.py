@@ -25,7 +25,6 @@ async def init_db():
     else:
         mongo_dsn = "mongodb://localhost:27017"
         db_name = "sandbox"
-    print(f"Connecting to MongoDB at {mongo_dsn}, using database '{db_name}'")
 
     client = AsyncIOMotorClient(mongo_dsn)
     
@@ -46,21 +45,7 @@ async def connect_to_mongo():
     Connect to MongoDB and initialize Beanie ODM.
     Called during application startup.
     """
-    global _client
-    mongo_dsn = os.getenv("MONGO_DSN", "mongodb://localhost:27017")
-    db_name = os.getenv("MONGO_DB_NAME", "sandbox")
-
-    _client = AsyncIOMotorClient(mongo_dsn)
-
-    await init_beanie(
-        database=_client[db_name],
-        document_models=[
-            HotelSuite,
-            Hotel,
-            HotelProfile,
-            Booking,
-        ]
-    )
+    await init_db()
 
 
 async def close_mongo_connection():
