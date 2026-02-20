@@ -12,19 +12,39 @@ _client: AsyncIOMotorClient = None
 
 
 load_dotenv(verbose=True)
+
+
+def sanitize_env_value(value: str) -> str:
+    """Remove quotes, carriage returns, and whitespace from environment variable values."""
+    if not value:
+        return ""
+    return value.strip().strip('"').strip("'").replace('\r', '').replace('\n', '').strip()
+
+
 async def init_db():
     """
     Initialize the MongoDB connection and Beanie ODM.
     """
+    # Get and sanitize environment variable
+    environment = sanitize_env_value(os.getenv("ENVIRONMENT", ""))
+
     # Use environment variables for configuration with defaults
-    if os.getenv("ENVIRONMENT") == "production":
-        mongo_dsn = os.getenv("MONGO_DSN")
-        db_name = os.getenv("MONGO_DB_NAME")
+    if environment == "production":
+        mongo_dsn = sanitize_env_value(os.getenv("MONGO_DSN", ""))
+        db_name = sanitize_env_value(os.getenv("MONGO_DB_NAME", ""))
+
+        # Fallback if MONGO_DSN is not set
+        if not mongo_dsn:
+            mongo_dsn = sanitize_env_value(os.getenv("DATABASE_URL", ""))
+
+        # Fallback if db_name is still empty or invalid
+        if not db_name:
+            db_name = "test_mobile"
     else:
         mongo_dsn = "mongodb://localhost:27017"
         db_name = "sandbox"
 
-    print(f"=== Connecting to MongoDB at {mongo_dsn}, using database '{db_name}' ===")
+    print(f"=== Connecting to MongoDB {mongo_dsn}, using database '{db_name}' ===")
     client = AsyncIOMotorClient(mongo_dsn)
     
     # Initialize Beanie with the database and document models
