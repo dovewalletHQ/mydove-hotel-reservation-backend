@@ -36,23 +36,6 @@ builder:
 # Inject ENV variables into containers (secrets come from .kamal/secrets).
 
 env:
-  clear:
-    # Redis connection (Kamal accessory provides the hostname automatically)
-    REDIS_HOST: mydove-kamal-redis
-    REDIS_PORT: "6379"
-    REDIS_USERNAME: default
-
-    # Timeouts and limits (non-sensitive)
-    OGATEWAY_TIMEOUT: "30"
-    OGATEWAY_RATE_LIMIT_PER_MINUTE: "60"
-    WEBHOOK_RATE_LIMIT_PER_MINUTE: "60"
-    WEBHOOK_RATE_LIMIT_PER_IP: "20"
-    ACCESS_TOKEN_EXPIRE_MINUTES: "60"
-    JWT_EXPIRE_MINUTES: "1440"
-    OTP_EXPIRE_SECONDS: "300"
-    DEFAULT_CACHE_EXPIRE: "3600"
-    ENABLE_SYSTEM_MONITORING: "false"
-
   secret:
     # Database credentials (external MongoDB)
     - MONGO_DSN
