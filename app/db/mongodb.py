@@ -18,7 +18,7 @@ async def init_db():
     """
     # Use environment variables for configuration with defaults
     if os.getenv("ENVIRONMENT") == "production":
-        mongo_dsn = os.getenv("MONGO_DSN")
+        mongo_dsn = os.getenv("DATABASE_URL")
         db_name = os.getenv("MONGO_DB_NAME")
     else:
         mongo_dsn = "mongodb://localhost:27017"
