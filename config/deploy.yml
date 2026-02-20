@@ -36,9 +36,11 @@ builder:
 # Inject ENV variables into containers (secrets come from .kamal/secrets).
 
 env:
+  clear:
+    ENVIRONMENT: production
   secret:
     # Database credentials (external MongoDB)
-    - MONGO_DSN
+    - DATABASE_URL
     - MONGO_DB_NAME
 
 
