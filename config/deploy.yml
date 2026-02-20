@@ -40,9 +40,8 @@ env:
     ENVIRONMENT: production
   secret:
     # Database credentials (external MongoDB)
-    - DATABASE_URL
+    - MONGO_DSN
     - MONGO_DB_NAME
-
 
 
 ssh:
