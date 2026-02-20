@@ -1,22 +1,18 @@
 # Name of your application. Used to uniquely configure containers.
-service: dove-reservation
+service: mydove-kamal-reservation
 
 # Name of the container image.
-image: dovewalletHQ/reservation
+image: dovewallethq/reservation
 
 # Deploy to these servers.
 servers:
   web:
     - 146.190.33.205
-
-# Enable SSL auto certification via Let's Encrypt and allow for multiple apps on a single web server.
-# Remove this section when using multiple web servers and ensure you terminate SSL at your load balancer.
 #
 # Note: If using Cloudflare, set encryption mode in SSL/TLS setting to "Full" to enable CF-to-app encryption.
 proxy:
   ssl: true
   host: reservation.dovewallet.co
-  # Proxy connects to your container on port 80 by default.
   app_port: 8080
   healthcheck:
     interval: 5
@@ -29,50 +25,41 @@ registry:
    server: ghcr.io
    username: dovewalletHQ
    password:
-     - DOVE_KAMAL_REGISTRY_PASSWORD
+     - KAMAL_REGISTRY_PASSWORD
 
 # Configure builder setup.
+# Build on remote server to avoid local network issues
 builder:
   remote: 146.190.33.205
   arch: amd64
-  # Pass in additional build args needed for your Dockerfile.
-  # args:
-  #   RUBY_VERSION: <%= ENV["RBENV_VERSION"] || ENV["rvm_ruby_string"] || "#{RUBY_ENGINE}-#{RUBY_ENGINE_VERSION}" %>
 
 # Inject ENV variables into containers (secrets come from .kamal/secrets).
-#
+
 env:
   clear:
-    DB_HOST: 146.190.33.205
-  secret:
-    - KAMAL_REGISTRY_PASSWORD
+    # Redis connection (Kamal accessory provides the hostname automatically)
+    REDIS_HOST: mydove-kamal-redis
+    REDIS_PORT: "6379"
+    REDIS_USERNAME: default
 
-# Use a different ssh user than root
-#
+    # Timeouts and limits (non-sensitive)
+    OGATEWAY_TIMEOUT: "30"
+    OGATEWAY_RATE_LIMIT_PER_MINUTE: "60"
+    WEBHOOK_RATE_LIMIT_PER_MINUTE: "60"
+    WEBHOOK_RATE_LIMIT_PER_IP: "20"
+    ACCESS_TOKEN_EXPIRE_MINUTES: "60"
+    JWT_EXPIRE_MINUTES: "1440"
+    OTP_EXPIRE_SECONDS: "300"
+    DEFAULT_CACHE_EXPIRE: "3600"
+    ENABLE_SYSTEM_MONITORING: "false"
+
+  secret:
+    # Database credentials (external MongoDB)
+    - MONGO_DSN
+    - MONGO_DB_NAME
+
+
+
 ssh:
   user: tiny-dove
   keys: ["~/.ssh/tiny_dove"]
-
-# Use accessory services (secrets come from .kamal/secrets).
-#
-# accessories:
-#   db:
-#     image: mysql:8.0
-#     host: 192.168.0.2
-#     port: 3306
-#     env:
-#       clear:
-#         MYSQL_ROOT_HOST: '%'
-#       secret:
-#         - MYSQL_ROOT_PASSWORD
-#     files:
-#       - config/mysql/production.cnf:/etc/mysql/my.cnf
-#       - db/production.sql:/docker-entrypoint-initdb.d/setup.sql
-#     directories:
-#       - data:/var/lib/mysql
-#   redis:
-#     image: valkey/valkey:8
-#     host: 192.168.0.2
-#     port: 6379
-#     directories:
-#       - data:/data
