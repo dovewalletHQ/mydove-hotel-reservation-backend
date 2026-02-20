@@ -24,6 +24,7 @@ async def init_db():
         mongo_dsn = "mongodb://localhost:27017"
         db_name = "sandbox"
 
+    print(f"=== Connecting to MongoDB at {mongo_dsn}, using database '{db_name}' ===")
     client = AsyncIOMotorClient(mongo_dsn)
     
     # Initialize Beanie with the database and document models
