@@ -1,4 +1,6 @@
 import os
+
+from dotenv import load_dotenv
 from motor.motor_asyncio import AsyncIOMotorClient
 from beanie import init_beanie
 
@@ -9,13 +11,21 @@ from app.models.booking import Booking
 _client: AsyncIOMotorClient = None
 
 
+load_dotenv(verbose=True)
 async def init_db():
     """
     Initialize the MongoDB connection and Beanie ODM.
     """
     # Use environment variables for configuration with defaults
-    mongo_dsn = os.getenv("MONGO_DSN", "mongodb://localhost:27017")
-    db_name = os.getenv("MONGO_DB_NAME", "sandbox")
+    # mongo_dsn = os.getenv("MONGO_DSN", "mongodb://localhost:27017")
+    # db_name = os.getenv("MONGO_DB_NAME", "sandbox")
+    if os.getenv("environment") == "production":
+        mongo_dsn = os.getenv("MONGO_DSN")
+        db_name = os.getenv("MONGO_DB_NAME")
+    else:
+        mongo_dsn = "mongodb://localhost:27017"
+        db_name = "sandbox"
+    print(f"Connecting to MongoDB at {mongo_dsn}, using database '{db_name}'")
 
     client = AsyncIOMotorClient(mongo_dsn)
     
