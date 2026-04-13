@@ -47,6 +47,8 @@ class HotelProfile(BaseMongoModel):
     instagram_handle: str | None = Field(default=None, description="Instagram handle of the hotel [optional]")
     facebook_handle: str | None = Field(default=None, description="Facebook handle of the hotel [optional]")
     twitter_handle: str | None = Field(default=None, description="Twitter handle of the hotel [optional]")
+    phone_number: str | None = Field(default=None, description="Phone number of the hotel [optional]")
+    email: str | None = Field(default=None, description="Email address of the hotel [optional]")
 
     class Settings:
         name = "hotel_profiles"

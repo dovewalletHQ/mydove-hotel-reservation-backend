@@ -21,6 +21,8 @@ class HotelProfileCreateRequest(BaseModel):
     instagram_handle: Optional[str] = None
     facebook_handle: Optional[str] = None
     twitter_handle: Optional[str] = None
+    phone_number: Optional[str] = None
+    email: Optional[str] = None
 
 
 class HotelProfileUpdateRequest(BaseModel):
@@ -30,6 +32,8 @@ class HotelProfileUpdateRequest(BaseModel):
     instagram_handle: Optional[str] = None
     facebook_handle: Optional[str] = None
     twitter_handle: Optional[str] = None
+    phone_number: Optional[str] = None
+    email: Optional[str] = None
 
 
 @router.post("", status_code=status.HTTP_201_CREATED)
@@ -104,11 +108,29 @@ async def update_profile(hotel_id: str, request: HotelProfileUpdateRequest):
             )
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=err_response)
         if not existing:
-            err_response = create_response(
-                status_code=status.HTTP_404_NOT_FOUND,
-                message="Profile not found",
+            # create profile instead of returning an error
+            hotel_profile = HotelProfile(
+                hotel_id=hotel_id,
+                description=request.description,
+                display_photo_url=request.display_photo_url,
+                instagram_handle=request.instagram_handle,
+                facebook_handle=request.facebook_handle,
+                twitter_handle=request.twitter_handle,
+                phone_number=request.phone_number,
+                email=request.email,
             )
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=err_response)
+            profile = await HotelProfileService.create_hotel_profile(hotel_profile)
+            if isinstance(profile, str):
+                err_response = create_response(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    message=profile,
+                )
+                raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=err_response)
+            return create_response(
+                status_code=status.HTTP_201_CREATED,
+                message="Hotel profile created successfully",
+                data=profile.model_dump(),
+            )
 
         # Update fields
         update_data = request.model_dump(exclude_unset=True)
@@ -128,18 +150,17 @@ async def update_profile(hotel_id: str, request: HotelProfileUpdateRequest):
         raise
     except ValueError as e:
         logger.warning("Failed to update profile: %s", e)
-        err_response = create_response(
+        return create_response(
             status_code=status.HTTP_400_BAD_REQUEST,
             message=str(e),
         )
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=err_response)
+
     except Exception as e:
         logger.error("Unexpected error updating profile: %s", e)
-        err_response = create_response(
+        return create_response(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             message="An unexpected error occurred"
         )
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=err_response)
 
 
 @router.delete("/{hotel_id}", status_code=status.HTTP_204_NO_CONTENT)
@@ -167,8 +188,7 @@ async def delete_profile(hotel_id: str):
         raise
     except Exception as e:
         logger.error("Unexpected error deleting profile: %s", e)
-        error_response = create_response(
+        return create_response(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             message="An unexpected error occurred"
         )
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=error_response)
