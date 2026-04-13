@@ -37,8 +37,8 @@ class HotelService:
         latitude: Optional[float] = None,
         longitude: Optional[float] = None,
         radius_km: Optional[float] = 10.0,
-    ) -> List[Hotel]:
-        """Get all hotels with filters"""
+    ) -> List[Dict[str, Any]]:
+        """Get all hotels with filters and attached profiles"""
         logger.info("Getting all hotels with filters")
         return await HotelRepository.get_hotels(
             skip=skip,

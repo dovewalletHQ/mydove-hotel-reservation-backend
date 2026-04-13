@@ -4,7 +4,7 @@ from beanie.odm.operators.find.comparison import In
 from bson import ObjectId
 from datetime import datetime
 
-from app.models.hotel import HotelSuite, Hotel
+from app.models.hotel import HotelSuite, Hotel, HotelProfile
 from app.core.logger import logger
 
 class HotelRepository: 
@@ -14,6 +14,29 @@ class HotelRepository:
     async def create_hotel(hotel: Hotel) -> Hotel:
         logger.info("Creating hotel: %s", hotel)
         return await hotel.save()
+
+    @staticmethod
+    async def _enrich_hotels_with_profiles(hotels: List[Hotel]) -> List[Dict[str, Any]]:
+        """Batch-fetch HotelProfile documents and attach them to each hotel."""
+        if not hotels:
+            return []
+
+        hotel_ids = [str(h.id) for h in hotels]
+
+        profiles = await HotelProfile.find(
+            In(HotelProfile.hotel_id, hotel_ids)
+        ).to_list()
+        profile_map: Dict[str, Dict[str, Any]] = {
+            p.hotel_id: p.model_dump() for p in profiles
+        }
+
+        enriched: List[Dict[str, Any]] = []
+        for hotel in hotels:
+            hotel_data = hotel.model_dump()
+            hotel_data["profile"] = profile_map.get(str(hotel.id), None)
+            enriched.append(hotel_data)
+
+        return enriched
 
     @staticmethod
     async def get_hotels(
@@ -27,8 +50,8 @@ class HotelRepository:
         latitude: Optional[float] = None,
         longitude: Optional[float] = None,
         radius_km: Optional[float] = 10.0,
-    ) -> List[Hotel]:
-        """Get all hotels with optional filtering and pagination"""
+    ) -> List[Dict[str, Any]]:
+        """Get all hotels with optional filtering, pagination, and attached profile"""
         logger.info("Getting all hotels with filters: skip=%s, limit=%s", skip, limit)
         
         query_filters = []
@@ -65,11 +88,14 @@ class HotelRepository:
                 
                 # Combine geospatial query with other filters
                 find_query = Hotel.find(geo_query, *query_filters)
-                return await find_query.skip(skip).limit(limit).to_list()
+                hotels = await find_query.skip(skip).limit(limit).to_list()
+            elif query_filters:
+                hotels = await Hotel.find(*query_filters).skip(skip).limit(limit).to_list()
+            else:
+                hotels = await Hotel.find_all().skip(skip).limit(limit).to_list()
 
-            if query_filters:
-                return await Hotel.find(*query_filters).skip(skip).limit(limit).to_list()
-            return await Hotel.find_all().skip(skip).limit(limit).to_list()
+            # Enrich each hotel with its profile
+            return await HotelRepository._enrich_hotels_with_profiles(hotels)
         except Exception as e:
             logger.error("Failed to fetch hotels: %s", e)
             raise
