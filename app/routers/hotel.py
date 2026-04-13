@@ -159,12 +159,16 @@ async def get_hotel(hotel_id: str):
         )
 
 
-@router.get("/owner/{owner_id}", response_model=List[Hotel])
+@router.get("/owner/{owner_id}")
 async def get_hotels_by_owner(owner_id: str):
     """Get all hotels owned by a specific owner."""
     try:
         hotels = await HotelService.get_hotels_by_owner(owner_id)
-        return hotels
+        return create_response(
+            status_code=status.HTTP_200_OK,
+            message="Hotels retrieved successfully",
+            data=hotels,
+        )
     except ValueError as e:
         logger.warning("Failed to get hotels by owner: %s", e)
         return create_response(

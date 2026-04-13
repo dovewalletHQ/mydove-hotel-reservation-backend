@@ -86,18 +86,16 @@ async def get_merchant_hotels(owner_id: str):
         )
     except ValueError as e:
         logger.warning("Failed to get merchant hotels: %s", e)
-        error_response = create_response(
+        return create_response(
             status_code=status.HTTP_400_BAD_REQUEST,
             message=str(e),
         )
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=error_response)
     except Exception as e:
         logger.error("Unexpected error getting merchant hotels: %s", e)
-        error_response = create_response(
+        return create_response(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             message="Opps an error occurred. Try again"
         )
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=error_response)
 
 
 @router.post("/{owner_id}/hotels", status_code=status.HTTP_201_CREATED)
@@ -112,18 +110,16 @@ async def create_hotel(owner_id: str, request: HotelCreateRequest):
         )
     except ValueError as e:
         logger.warning("Failed to create hotel: %s", e)
-        error_response = create_response(
+        return create_response(
             status_code=status.HTTP_400_BAD_REQUEST,
             message="Failed to create hotel, error: {}".format(e),
         )
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=error_response)
     except Exception as e:
         logger.error("Unexpected error creating hotel: %s", e)
-        error_response = create_response(
+        return create_response(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             message="Opps an error occurred. Try again"
         )
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=error_response)
 
 
 @router.patch("/{owner_id}/hotels/{hotel_id}")
@@ -140,25 +136,25 @@ async def update_hotel(owner_id: str, hotel_id: str, request: HotelUpdateRequest
     except ValueError as e:
         logger.warning("Failed to update hotel: %s", e)
         if "not found" in str(e).lower():
-            error_response = create_response(
+            return create_response(
                 status_code=status.HTTP_404_NOT_FOUND,
                 message="hotel with id not found",
             )
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=error_response)
         if "not authorized" in str(e).lower():
-            error_response = create_response(
+            return create_response(
                 status_code=status.HTTP_403_FORBIDDEN,
                 message="Opps! seems like you are not authorized to take this action for this hotel"
             )
-            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=error_response)
-        error_response = create_response(
+        return create_response(
             status_code=status.HTTP_400_BAD_REQUEST,
             message="Something went wrong while updating hotel details",
         )
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=error_response)
     except Exception as e:
         logger.error("Unexpected error updating hotel: %s", e)
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Internal server error")
+        return create_response(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            message="Internal server error"
+        )
 
 
 @router.patch("/{owner_id}/hotels/{hotel_id}/availability")
@@ -174,29 +170,25 @@ async def set_hotel_availability(owner_id: str, hotel_id: str, request: HotelAva
     except ValueError as e:
         logger.warning("Failed to set hotel availability: %s", e)
         if "not found" in str(e).lower():
-            error_response = create_response(
+            return create_response(
                 status_code=status.HTTP_404_NOT_FOUND,
                 message="hotel with id not found",
             )
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=error_response)
         if "not authorized" in str(e).lower():
-            error_response = create_response(
+            return create_response(
                 status_code=status.HTTP_403_FORBIDDEN,
                 message="Opps! seems like you are not authorized to take this action for this hotel"
             )
-            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=error_response)
-        error_response = create_response(
+        return create_response(
             status_code=status.HTTP_400_BAD_REQUEST,
             message="Something went wrong while setting hotel availability",
         )
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=error_response)
     except Exception as e:
         logger.error("Unexpected error setting hotel availability: %s", e)
-        error_response = create_response(
+        return create_response(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             message="Opps an error occurred. Try again"
         )
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=error_response)
 
 
 # ====================
@@ -212,13 +204,25 @@ async def get_merchant_hotel_suites(owner_id: str, hotel_id: str):
     except ValueError as e:
         logger.warning("Failed to get hotel suites: %s", e)
         if "not found" in str(e).lower():
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+            return create_response(
+                status_code=status.HTTP_404_NOT_FOUND,
+                message="hotel with id not found",
+            )
         if "not authorized" in str(e).lower():
-            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=str(e))
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+            return create_response(
+                status_code=status.HTTP_403_FORBIDDEN,
+                message="Opps! seems like you are not authorized to take this action for this hotel"
+            )
+        return create_response(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            message="Something went wrong while getting hotel suites",
+        )
     except Exception as e:
         logger.error("Unexpected error getting hotel suites: %s", e)
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Internal server error")
+        return create_response(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            message="Internal server error"
+        )
 
 
 @router.post("/{owner_id}/hotels/{hotel_id}/suites")
@@ -235,29 +239,25 @@ async def create_suite(owner_id: str, hotel_id: str, request: SuiteCreateRequest
     except ValueError as e:
         logger.warning("Failed to create suite: %s", e)
         if "not found" in str(e).lower():
-            error_response = create_response(
+            return create_response(
                 status_code=status.HTTP_404_NOT_FOUND,
                 message="hotel with id not found",
             )
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=error_response)
         if "not authorized" in str(e).lower():
-            error_response = create_response(
+            return create_response(
                 status_code=status.HTTP_403_FORBIDDEN,
                 message="Opps! seems like you are not authorized to take this action for this hotel"
             )
-            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=error_response)
-        error_response = create_response(
+        return create_response(
             status_code=status.HTTP_400_BAD_REQUEST,
             message=str(e),
         )
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=error_response)
     except Exception as e:
         logger.error("Unexpected error creating suite: %s", e)
-        error_response = create_response(
+        return create_response(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             message="Opps an error occurred. Try again"
         )
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=error_response)
 
 
 @router.patch("/{owner_id}/hotels/{hotel_id}/suites/{suite_id}")
@@ -274,25 +274,25 @@ async def update_suite(owner_id: str, hotel_id: str, suite_id: str, request: Sui
     except ValueError as e:
         logger.warning("Failed to update suite: %s", e)
         if "not found" in str(e).lower():
-            error_response = create_response(
+            return create_response(
                 status_code=status.HTTP_404_NOT_FOUND,
                 message="hotel with id not found",
             )
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=error_response)
         if "not authorized" in str(e).lower():
-            error_response = create_response(
+            return create_response(
                 status_code=status.HTTP_403_FORBIDDEN,
                 message="Opps! seems like you are not authorized to take this action for this hotel"
             )
-            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=error_response)
-        error_response = create_response(
+        return create_response(
             status_code=status.HTTP_400_BAD_REQUEST,
             message=str(e),
         )
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=error_response)
     except Exception as e:
         logger.error("Unexpected error updating suite: %s", e)
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Internal server error")
+        return create_response(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            message="Opps an error occurred. Try again"
+        )
 
 
 @router.delete("/{owner_id}/hotels/{hotel_id}/suites/{suite_id}")
@@ -308,35 +308,30 @@ async def delete_suite(owner_id: str, hotel_id: str, suite_id: str):
     except ValueError as e:
         logger.warning("Failed to delete suite: %s", e)
         if "not found" in str(e).lower():
-            error_response = create_response(
+            return create_response(
                 status_code=status.HTTP_404_NOT_FOUND,
                 message="hotel with id not found",
             )
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=error_response)
         if "not authorized" in str(e).lower():
-            error_response = create_response(
+            return create_response(
                 status_code=status.HTTP_403_FORBIDDEN,
                 message="Opps! seems like you are not authorized to take this action for this hotel"
             )
-            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=error_response)
         if "active bookings" in str(e).lower():
-            error_response = create_response(
+            return create_response(
                 status_code=status.HTTP_409_CONFLICT,
                 message="Opps! seems like you are not authorized to take this action for this hotel"
             )
-            raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=error_response)
-        error_response = create_response(
+        return create_response(
             status_code=status.HTTP_400_BAD_REQUEST,
             message="Failed to delete suite, error: {}".format(e),
         )
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=error_response)
     except Exception as e:
         logger.error("Unexpected error deleting suite: %s", e)
-        error_response = create_response(
+        return create_response(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             message="Opps an error occurred. Try again"
         )
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=error_response)
 
 
 @router.patch("/{owner_id}/hotels/{hotel_id}/suites/{suite_id}/availability", response_model=HotelSuite)
@@ -359,29 +354,25 @@ async def set_suite_availability(
     except ValueError as e:
         logger.warning("Failed to set suite availability: %s", e)
         if "not found" in str(e).lower():
-            error_response = create_response(
+            return create_response(
                 status_code=status.HTTP_404_NOT_FOUND,
                 message="suite or hotel not found",
             )
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=error_response)
         if "not authorized" in str(e).lower():
-            error_response = create_response(
+            return create_response(
                 status_code=status.HTTP_403_FORBIDDEN,
                 message="Opps! seems like you are not authorized to take this action for this suite"
             )
-            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=error_response)
-        error_response = create_response(
+        return create_response(
             status_code=status.HTTP_400_BAD_REQUEST,
             message="Failed to set suite availability, error: {}".format(e),
         )
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=error_response)
     except Exception as e:
         logger.error("Unexpected error setting suite availability: %s", e)
-        error_response = create_response(
+        return create_response(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             message="Opps an error occurred. Try again"
         )
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=error_response)
 
 
 # ====================
@@ -426,25 +417,25 @@ async def get_merchant_hotel_bookings(owner_id: str, hotel_id: str):
     except ValueError as e:
         logger.warning("Failed to get hotel bookings: %s", e)
         if "not found" in str(e).lower():
-            error_response = create_response(
+            return create_response(
                 status_code=status.HTTP_404_NOT_FOUND,
                 message="hotel with id not found",
             )
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=error_response)
         if "not authorized" in str(e).lower():
-            error_response = create_response(
+            return create_response(
                 status_code=status.HTTP_403_FORBIDDEN,
                 message="Opps! seems like you are not authorized to take this action for this hotel"
             )
-            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=error_response)
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+        return create_response(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            message="Failed to get hotel bookings, error: {}".format(e),
+        )
     except Exception as e:
         logger.error("Unexpected error getting hotel bookings: %s", e)
-        error_response = create_response(
+        return create_response(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             message="Opps an error occurred. Try again"
         )
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=error_response)
 
 
 # ====================
@@ -463,18 +454,16 @@ async def get_merchant_revenue_summary(owner_id: str) -> Dict[str, Any]:
         )
     except ValueError as e:
         logger.warning("Failed to get revenue summary: %s", e)
-        error_response = create_response(
+        return create_response(
             status_code=status.HTTP_400_BAD_REQUEST,
             message=str(e),
         )
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=error_response)
     except Exception as e:
         logger.error("Unexpected error getting revenue summary: %s", e)
-        error_response = create_response(
+        return create_response(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             message="Opps an error occurred. Try again"
         )
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=error_response)
 
 
 @router.get("/{owner_id}/hotels/{hotel_id}/dashboard")
@@ -490,26 +479,22 @@ async def get_hotel_dashboard_stats(owner_id: str, hotel_id: str) -> Dict[str, A
     except ValueError as e:
         logger.warning("Failed to get hotel dashboard stats: %s", e)
         if "not found" in str(e).lower():
-            error_response = create_response(
+            return create_response(
                 status_code=status.HTTP_404_NOT_FOUND,
                 message="hotel with id not found",
             )
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=error_response)
         if "not authorized" in str(e).lower():
-            error_response = create_response(
+            return create_response(
                 status_code=status.HTTP_403_FORBIDDEN,
                 message="Opps! seems like you are not authorized to take this action for this hotel"
             )
-            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=error_response)
-        error_response = create_response(
+        return create_response(
             status_code=status.HTTP_400_BAD_REQUEST,
             message="Failed to get hotel dashboard stats, error: {}".format(e),
         )
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=error_response)
     except Exception as e:
         logger.error("Unexpected error getting hotel dashboard stats: %s", e)
-        error_response = create_response(
+        return create_response(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             message="Opps an error occurred. Try again"
         )
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=error_response)

@@ -21,6 +21,7 @@ class MerchantService:
     async def get_merchant_hotels(owner_id: str) -> List[Hotel]:
         """Get all hotels owned by a merchant"""
         if not owner_id or not str(owner_id).strip():
+            logger.error("Invalid owner_id: owner_id cannot be None or empty")
             raise ValueError("Invalid owner_id: owner_id cannot be None or empty")
 
         logger.info("Getting hotels for merchant: %s", owner_id)

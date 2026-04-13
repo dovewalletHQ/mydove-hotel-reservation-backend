@@ -256,7 +256,8 @@ class HotelRepository:
 
         logger.info("Getting hotels by owner id: %s", owner_id)
         try:
-            return await Hotel.find(Hotel.owner_id == owner_id).to_list()
+            hotels = await Hotel.find(Hotel.owner_id == owner_id).to_list()
+            return hotels
         except Exception as e:
             logger.error("Failed to get hotels by owner id: %s", e)
             raise
