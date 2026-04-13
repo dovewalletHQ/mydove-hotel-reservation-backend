@@ -66,33 +66,34 @@ async def create_hotel_profile(request: HotelProfileCreateRequest):
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=error_response)
 
 
-@router.get("/{hotel_id}", response_model=HotelProfile)
+@router.get("/{hotel_id}")
 async def get_profile_by_hotel(hotel_id: str):
     """Get the profile for a specific hotel."""
     try:
         profile = await HotelProfileService.get_hotel_profile_by_hotel_id(hotel_id)
         if isinstance(profile, str):
-            err_response = create_response(
+            return create_response(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 message=profile,
             )
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=err_response)
         if not profile:
-            err_response = create_response(
+            return create_response(
                 status_code=status.HTTP_404_NOT_FOUND,
                 message="Profile not found for this hotel",
             )
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=err_response)
-        return profile
+        return create_response(
+            status_code=status.HTTP_200_OK,
+            message="Profile fetched successfully",
+            data=profile.model_dump(),
+        )
     except HTTPException:
         raise
     except Exception as e:
         logger.error("Unexpected error fetching profile by hotel: %s", e)
-        err_response = create_response(
+        return create_response(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             message="An unexpected error occurred"
         )
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=err_response)
 
 
 @router.patch("/{hotel_id}")
@@ -102,11 +103,10 @@ async def update_profile(hotel_id: str, request: HotelProfileUpdateRequest):
         # Get existing profile first
         existing = await HotelProfileService.get_hotel_profile_by_hotel_id(hotel_id)
         if isinstance(existing, str):
-            err_response = create_response(
+            return create_response(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 message=existing,
             )
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=err_response)
         if not existing:
             # create profile instead of returning an error
             hotel_profile = HotelProfile(
@@ -121,11 +121,10 @@ async def update_profile(hotel_id: str, request: HotelProfileUpdateRequest):
             )
             profile = await HotelProfileService.create_hotel_profile(hotel_profile)
             if isinstance(profile, str):
-                err_response = create_response(
+                return create_response(
                     status_code=status.HTTP_400_BAD_REQUEST,
                     message=profile,
                 )
-                raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=err_response)
             return create_response(
                 status_code=status.HTTP_201_CREATED,
                 message="Hotel profile created successfully",
