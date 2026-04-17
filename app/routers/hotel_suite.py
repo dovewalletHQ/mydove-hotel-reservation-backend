@@ -22,6 +22,7 @@ class HotelSuiteCreateRequest(BaseModel):
     price: Decimal = Field(..., gt=0)
     currency: str = Field(default="NGN", min_length=3, max_length=3)
     capacity: int = Field(default=2, ge=1)
+    number_of_vistors = Field(default=1, ge=1)
     facilities: Optional[List[str]] = None
     images: Optional[List[str]] = None
 
@@ -34,6 +35,7 @@ class HotelSuiteUpdateRequest(BaseModel):
     capacity: Optional[int] = Field(None, ge=1)
     facilities: Optional[List[str]] = None
     images: Optional[List[str]] = None
+    number_of_vistors: Optional[int] = Field(None, ge=1)
     is_available: Optional[bool] = None
 
 
