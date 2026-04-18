@@ -117,7 +117,7 @@ class ReviewService:
 
     @staticmethod
     async def update_review(
-        review_id: str, reviewer_phone: str, request: UpdateReviewRequest
+        review_id: str, request: UpdateReviewRequest
     ) -> ReviewResponse:
         """
         Update a review. Only the original reviewer can update.
@@ -128,7 +128,7 @@ class ReviewService:
             raise ValueError("Review not found")
 
         # Verify ownership
-        if review.reviewer_phone != reviewer_phone:
+        if review.reviewer_phone != request.reviewer_phone:
             raise ValueError("You can only edit your own review")
 
         # Apply updates

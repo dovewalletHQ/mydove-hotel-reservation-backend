@@ -10,6 +10,7 @@ from app.models.review import (
     OwnerReplyRequest,
 )
 from app.services.review import ReviewService
+from pydantic import BaseModel
 
 logger = setup_logger(name="review_router")
 
@@ -103,12 +104,11 @@ async def get_review(review_id: str):
 @router.patch("/{review_id}")
 async def update_review(
     review_id: str,
-    req: UpdateReviewRequest,
-    reviewer_phone: str = Query(..., description="Phone number of the reviewer (for ownership verification)"),
+    req: UpdateReviewRequest
 ):
     """Update a review. Only the original reviewer can update their review."""
     try:
-        review = await ReviewService.update_review(review_id, reviewer_phone, req)
+        review = await ReviewService.update_review(review_id, req)
         return create_response(
             status_code=status.HTTP_200_OK,
             message="Review updated successfully",
@@ -130,15 +130,17 @@ async def update_review(
 
 # ─── Delete ─────────────────────────────────────────────────────────────────
 
+class DeleteReviewRequest(BaseModel):
+    reviewer_phone: str
 
 @router.delete("/{review_id}")
 async def delete_review(
     review_id: str,
-    reviewer_phone: str = Query(..., description="Phone number of the reviewer (for ownership verification)"),
+    req: DeleteReviewRequest
 ):
     """Delete a review. Only the original reviewer can delete their review."""
     try:
-        await ReviewService.delete_review(review_id, reviewer_phone)
+        await ReviewService.delete_review(review_id, req.reviewer_phone)
         return create_response(
             status_code=status.HTTP_200_OK,
             message="Review deleted successfully",

@@ -53,6 +53,7 @@ class CreateReviewRequest(BaseModel):
 
 class UpdateReviewRequest(BaseModel):
     """Request model for updating a review (only rating and comment can change)"""
+    reviewer_phone: str = Field(..., description="Phone number of the reviewer")
     rating: Optional[int] = Field(default=None, ge=1, le=5, description="Updated star rating")
     comment: Optional[str] = Field(default=None, min_length=1, max_length=5000, description="Updated review text")
 
