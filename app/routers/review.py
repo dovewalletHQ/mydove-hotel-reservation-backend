@@ -44,7 +44,6 @@ async def create_review(req: CreateReviewRequest):
         )
     except Exception as e:
         logger.error("Unexpected error creating review: %s", e)
-        print(str(e))
         return create_response(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             message="An error occurred while creating the review",
