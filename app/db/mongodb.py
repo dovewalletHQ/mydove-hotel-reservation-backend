@@ -6,6 +6,7 @@ from beanie import init_beanie
 
 from app.models.hotel import HotelSuite, Hotel, HotelProfile
 from app.models.booking import Booking
+from app.models.review import Review
 
 # Global client reference for connection management
 _client: AsyncIOMotorClient = None
@@ -55,6 +56,7 @@ async def init_db():
             Hotel,
             HotelProfile,
             Booking,
+            Review,
         ]
     )
 

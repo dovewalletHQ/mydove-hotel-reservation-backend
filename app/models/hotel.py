@@ -71,6 +71,10 @@ class Hotel(BaseMongoModel):
     city: str | None = Field(default=None, description="City of the hotel [optional]")
     location: Optional[Dict[str, Any]] = Field(default=None, description="GeoJSON Point: {type: 'Point', coordinates: [lon, lat]}")
 
+    # Aggregate review data (updated automatically when reviews are created/updated/deleted)
+    average_rating: float = Field(default=0.0, ge=0, le=5, description="Average star rating from reviews")
+    total_reviews: int = Field(default=0, ge=0, description="Total number of reviews")
+
     class Settings:
         name = "hotel"
         indexes = [

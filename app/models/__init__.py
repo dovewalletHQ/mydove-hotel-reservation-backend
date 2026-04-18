@@ -2,6 +2,7 @@ from app.models.base import BaseMongoModel, PyObjectId
 from app.models.money import Money
 from app.models.hotel import Hotel, HotelSuite, HotelProfile, RoomType
 from app.models.booking import Booking, BookingType, BookingStatus
+from app.models.review import Review
 
 __all__ = [
     "BaseMongoModel",
@@ -14,5 +15,6 @@ __all__ = [
     "Booking",
     "BookingType",
     "BookingStatus",
+    "Review",
 ]
 
