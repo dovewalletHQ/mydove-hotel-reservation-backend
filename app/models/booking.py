@@ -1,7 +1,7 @@
 """Booking model for hotel reservations"""
 
 import enum
-from datetime import datetime
+from datetime import datetime, date, time
 from typing import Optional
 
 from pydantic import Field, BaseModel
@@ -40,6 +40,7 @@ class Booking(BaseMongoModel):
     # Booking dates
     check_in_date: datetime = Field(..., description="Check-in date and time")
     check_out_date: datetime = Field(..., description="Check-out date and time")
+    number_of_nights: int = Field(default=1, ge=1, description="Number of nights for the reservation")
 
     # Booking details
     booking_type: BookingType = Field(default=BookingType.ONLINE, description="Type of booking")
@@ -62,14 +63,26 @@ class Booking(BaseMongoModel):
 
 
 class HotelSuiteBookingRequest(BaseModel):
-    """Request model for booking a hotel suite"""
+    """Request model for booking a hotel suite.
+    
+    Matches the mobile app design:
+    - reservation_date: the date of reservation (dd/mm/yyyy)
+    - expected_check_in_time: expected time of check-in (HH:MM, 24hr format)
+    - number_of_nights: days/nights of reservation (e.g. 1 night, 2 nights)
+    
+    The server computes check_in_date and check_out_date from these fields.
+    """
     hotel_id: str = Field(..., description="ID of the hotel")
     suite_id: str = Field(..., description="ID of the hotel suite/room being booked")
     guest_name: str = Field(..., min_length=1, description="Name of the guest")
     guest_phone: str = Field(..., min_length=1, description="Phone number of the guest")
     guest_email: Optional[str] = Field(default=None, description="Email of the guest (optional)")
-    check_in_date: datetime = Field(..., description="Check-in date and time")
-    check_out_date: datetime = Field(..., description="Check-out date and time")
+
+    # Reservation scheduling (matches mobile design)
+    reservation_date: date = Field(..., description="Date of reservation (the check-in date)")
+    expected_check_in_time: time = Field(..., description="Expected time of check-in (e.g. 14:00)")
+    number_of_nights: int = Field(default=1, ge=1, description="Number of nights for the reservation")
+
     booking_type: BookingType = Field(default=BookingType.ONLINE, description="Type of booking")
     status: BookingStatus = Field(default=BookingStatus.PENDING, description="Current status of the booking")
     total_amount: Money = Field(..., gt=0, description="Total amount for the booking")
@@ -93,6 +106,7 @@ class HotelSuiteBookingResponse(BaseModel):
     guest_email: Optional[str] = Field(default=None, description="Guest email (if provided)")
     check_in_date: datetime = Field(..., description="Check-in datetime in ISO format")
     check_out_date: datetime = Field(..., description="Check-out datetime in ISO format")
+    number_of_nights: int = Field(default=1, ge=1, description="Number of nights for the reservation")
     booking_type: BookingType = Field(default=BookingType.ONLINE, description="Booking type")
     status: BookingStatus = Field(default=BookingStatus.CONFIRMED, description="Booking status updated to confirmed")
     total_amount: Money = Field(..., gt=0, description="Total booking amount")

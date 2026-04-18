@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Optional
 
 from app.core.logger import setup_logger
@@ -125,25 +125,31 @@ class HotelSuiteService:
         if suite_id is None or request is None:
             raise ValueError("Invalid suite id or request")
         
+        # Compute check-in and check-out datetimes from the design fields
+        check_in_date = datetime.combine(request.reservation_date, request.expected_check_in_time)
+        check_out_date = check_in_date + timedelta(days=request.number_of_nights)
+
         # check if suite is available
         try:
             suite = await HotelRepository.get_hotel_suite_by_id(suite_id)
             if suite is None:
                 logger.error("Suite with id '%s' not found", suite_id)
                 raise ValueError("Suite not found")
-            # check if the checking date is before the checkout date
-            if request.check_in_date >= request.check_out_date:
-                logger.error("Check-in date must be before check-out date")
-                raise ValueError("Check-in date must be before check-out date")
-            # check if there's a current booking but the new check-in date is before the current booking's check-out date
-            booking = await BookingService.get_booking_by_suite_id(suite_id)
-            if booking is not None:
-                if request.check_in_date < booking.check_out_date:
+
+            # check if there's a current booking and the new check-in date conflicts
+            existing_booking = await BookingService.get_booking_by_suite_id(suite_id)
+            if existing_booking is not None:
+                if check_in_date < existing_booking.check_out_date:
                     logger.error("Check-in date must be after the current booking's check-out date")
                     raise ValueError("Check-in date must be after the current booking's check-out date")
 
-            # booking suite for user
-            booking = await BookingService.create_booking(request.model_dump())
+            # Build the booking data from the request, replacing date fields with computed values
+            booking_data = request.model_dump(exclude={"reservation_date", "expected_check_in_time"})
+            booking_data["check_in_date"] = check_in_date
+            booking_data["check_out_date"] = check_out_date
+
+            # Create the booking
+            booking = await BookingService.create_booking(booking_data)
             if booking is None:
                 logger.error("Error booking suite with id '%s'", suite_id)
                 raise ValueError("Error booking suite")
@@ -159,6 +165,7 @@ class HotelSuiteService:
                 guest_email=booking.guest_email,
                 check_in_date=booking.check_in_date,
                 check_out_date=booking.check_out_date,
+                number_of_nights=booking.number_of_nights,
                 booking_type=booking.booking_type,
                 status=booking.status,
                 total_amount=booking.total_amount,
