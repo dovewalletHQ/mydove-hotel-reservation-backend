@@ -51,7 +51,7 @@ class BookingService:
             check_out_date
         )
         if not is_available:
-            raise ValueError("Suite is not available for the selected dates")
+            raise ValueError("Suite has already been booked for the selected date, please select another date or another suite")
 
         # Create the booking
         booking = Booking(
@@ -109,7 +109,7 @@ class BookingService:
             check_out_date
         )
         if not is_available:
-            raise ValueError("Suite is not available for the selected dates")
+            raise ValueError("Suite has already been booked for the selected date, please select another date or another suite")
 
         # Create walk-in booking with CHECKED_IN status
         booking = Booking(
